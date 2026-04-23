@@ -98,7 +98,7 @@
           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
         </svg>
         Lista de Barberos
-        <span class="nav-badge">4</span>
+        <span class="nav-badge">{{ $barberos->count() }}</span>
       </button>
       <button class="nav-item" onclick="showPanel('barber-register')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -624,7 +624,6 @@
         </div>
       </div>
 
-      <!-- ===== LISTA BARBEROS ===== -->
       <div class="panel" id="panel-barbers-list">
         <div class="barbers-controls">
           <div style="flex:1;">
@@ -646,75 +645,49 @@
             Registrar
           </button>
         </div>
+        @if(session('success'))
+        <div class="feedback feedback--ok" style="margin-bottom:16px;">
+          {{ session('success') }}
+        </div>
+        @endif
         <div class="barbers-grid">
-          @forelse($barbers ?? [] as $barber)
+          @forelse($barberos ?? [] as $barbero)
           <div class="barber-card">
             <div class="barber-card-top">
               <div class="barber-avatar">
-                @if($barber->avatar)<img src="{{ asset('storage/'.$barber->avatar) }}" alt="">@else{{ substr($barber->name,0,1) }}@endif
+                {{ substr(optional($barbero->usuario)->nombre ?? 'B', 0, 1) }}
               </div>
               <div>
-                <div class="barber-name">{{ $barber->name }}</div>
-                <div class="barber-spec">{{ $barber->specialty ?? 'Barbero' }}</div>
-                <span class="badge {{ $barber->active ? 'badge--green' : 'badge--red' }}">{{ $barber->active ? 'Activo' : 'Inactivo' }}</span>
+                <div class="barber-name">{{ optional($barbero->usuario)->nombre ?? 'Sin nombre' }}</div>
+                <div class="barber-spec">{{ optional($barbero->usuario)->especialidad ?? 'Barbero' }}</div>
+                <span class="badge {{ optional($barbero->usuario)->estado ? 'badge--green' : 'badge--red' }}">
+                  {{ optional($barbero->usuario)->estado ? 'Activo' : 'Inactivo' }}
+                </span>
               </div>
             </div>
             <div class="barber-stats">
               <div class="barber-stat">
-                <div class="barber-stat-val">{{ $barber->appointments_count ?? 0 }}</div>
-                <div class="barber-stat-lbl">Citas</div>
+                <div class="barber-stat-val">{{ optional($barbero->usuario)->telefono ?? '—' }}</div>
+                <div class="barber-stat-lbl">Teléfono</div>
               </div>
               <div class="barber-stat">
-                <div class="barber-stat-val">{{ $barber->rating ?? '5.0' }}</div>
-                <div class="barber-stat-lbl">Rating</div>
+                <div class="barber-stat-val" style="font-size:10px;">{{ optional($barbero->usuario)->email ?? '—' }}</div>
+                <div class="barber-stat-lbl">Correo</div>
               </div>
             </div>
             <div class="barber-actions">
-              <form action="{{ route('admin.barbers.toggle', $barber->id) }}" method="POST" style="flex:1;">
+              <form action="{{ route('admin.barbers.toggle', $barbero->id_barbero) }}" method="POST" style="flex:1;">
                 @csrf @method('PATCH')
-                <button type="submit" class="barber-toggle {{ $barber->active ? 'barber-toggle--active' : 'barber-toggle--inactive' }}" style="width:100%;">
-                  {{ $barber->active ? 'Desactivar' : 'Activar' }}
+                <button type="submit"
+                  class="barber-toggle {{ optional($barbero->usuario)->estado ? 'barber-toggle--active' : 'barber-toggle--inactive' }}"
+                  style="width:100%;">
+                  {{ optional($barbero->usuario)->estado ? 'Desactivar' : 'Activar' }}
                 </button>
               </form>
-              <button class="barber-edit" onclick="showPanel('barber-register')" title="Editar">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-              </button>
             </div>
           </div>
           @empty
-          <!-- Demo cards -->
-          @foreach([['Pedro Gómez','Fade & Barba','Activo',true,28,'4.9'],['Luis Mora','Clásico','Activo',true,15,'4.7'],['Andrés Cruz','Diseño','Inactivo',false,5,'4.5'],['Camilo R','Moderno','Activo',true,32,'5.0']] as $b)
-          <div class="barber-card">
-            <div class="barber-card-top">
-              <div class="barber-avatar">{{ substr($b[0],0,1) }}</div>
-              <div>
-                <div class="barber-name">{{ $b[0] }}</div>
-                <div class="barber-spec">{{ $b[1] }}</div>
-                <span class="badge {{ $b[3] ? 'badge--green' : 'badge--red' }}">{{ $b[2] }}</span>
-              </div>
-            </div>
-            <div class="barber-stats">
-              <div class="barber-stat">
-                <div class="barber-stat-val">{{ $b[4] }}</div>
-                <div class="barber-stat-lbl">Citas</div>
-              </div>
-              <div class="barber-stat">
-                <div class="barber-stat-val">{{ $b[5] }}</div>
-                <div class="barber-stat-lbl">Rating</div>
-              </div>
-            </div>
-            <div class="barber-actions">
-              <button class="barber-toggle {{ $b[3] ? 'barber-toggle--active' : 'barber-toggle--inactive' }}" style="flex:1;">{{ $b[3] ? 'Desactivar' : 'Activar' }}</button>
-              <button class="barber-edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg></button>
-            </div>
-          </div>
-          @endforeach
+          <p style="color:var(--muted2);padding:20px;">No hay barberos registrados aún.</p>
           @endforelse
         </div>
       </div>
@@ -740,11 +713,11 @@
           padding:15px;
           border-radius:12px;
           margin-bottom:20px;">
-              <ul style="margin:0;padding-left:18px;">
-                  @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                  @endforeach
-              </ul>
+            <ul style="margin:0;padding-left:18px;">
+              @foreach ($errors->all() as $error)
+              <li>{{ $error }}</li>
+              @endforeach
+            </ul>
           </div>
           @endif
           <form action="{{ route('admin.barbers.store') }}" method="POST">
@@ -862,17 +835,15 @@
               </button>
             </div>
           </form>
-          @if ($errors->any())
-          <script>
-          document.addEventListener('DOMContentLoaded', function(){
+        </div>
+        @if ($errors->any())
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
             showPanel('barber-register');
           });
-          </script>
-          @endif
-        </div>
+        </script>
+        @endif
       </div>
-
-      <!-- ===== AGENDA ===== -->
       <div class="panel" id="panel-agenda">
         <div class="agenda-controls">
           <div style="flex:1;">
@@ -1024,79 +995,157 @@
       <!-- ===== BARBERÍA ===== -->
       <div class="panel" id="panel-barberia">
         <div style="margin-bottom:24px;">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">Estado de la Barbería</div>
-          <div style="font-size:13px;color:var(--muted2);">Controla la apertura y cierre de tu local</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">
+            Estado de la Barbería
+          </div>
+          <div style="font-size:13px;color:var(--muted2);">
+            Controla la apertura y cierre de tu local
+          </div>
         </div>
+
+        {{-- Feedback --}}
+        @if(session('success'))
+        <div class="feedback feedback--ok" style="margin-bottom:16px;">
+          {{ session('success') }}
+        </div>
+        @endif
+
         <div class="two-col">
+
+          {{-- Estado actual + botón toggle --}}
           <div class="card">
-            <div class="card-hd"><span class="card-hd-title">Estado Actual</span></div>
+            <div class="card-hd">
+              <span class="card-hd-title">Estado Actual</span>
+            </div>
             <div class="card-body">
-              <div class="shop-status shop-status--open" id="barberiaStatus">
+
+              {{-- Indicador visual según DB --}}
+              @if($config?->estado)
+              <div class="shop-status shop-status--open">
                 <div class="status-dot status-dot--open"></div>
                 <div>
                   <div class="status-text status-text--open">BARBERÍA ABIERTA</div>
-                  <div style="font-size:11px;color:var(--muted);">Abierta desde las 8:00 AM</div>
+                  <div style="font-size:11px;color:var(--muted);">
+                    Desde las {{ \Carbon\Carbon::parse($config?->hora_apertura)->format('g:i A') }}
+                  </div>
                 </div>
               </div>
-              <div style="display:flex;gap:10px;margin-top:16px;">
-                <form action="{{ route('admin.barberia.toggle') }}" method="POST" style="flex:1;">
-                  @csrf @method('PATCH')
-                  <input type="hidden" name="status" value="closed">
-                  <button type="submit" class="toggle-btn toggle-btn--close" style="width:100%;" id="closeBtn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="3" width="18" height="18" rx="2" />
-                      <line x1="9" y1="9" x2="15" y2="15" />
-                      <line x1="15" y1="9" x2="9" y2="15" />
-                    </svg>
-                    Cerrar Barbería
-                  </button>
-                </form>
-                <form action="{{ route('admin.barberia.toggle') }}" method="POST" style="flex:1;">
-                  @csrf @method('PATCH')
-                  <input type="hidden" name="status" value="open">
-                  <button type="submit" class="toggle-btn toggle-btn--open" style="width:100%;" id="openBtn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                    </svg>
-                    Abrir Barbería
-                  </button>
-                </form>
+              @else
+              <div class="shop-status shop-status--closed">
+                <div class="status-dot status-dot--closed"></div>
+                <div>
+                  <div class="status-text status-text--closed">BARBERÍA CERRADA</div>
+                  <div style="font-size:11px;color:var(--muted);">
+                    La agenda está bloqueada
+                  </div>
+                </div>
               </div>
+              @endif
+
+              {{-- Botón único que alterna --}}
+              <form action="{{ route('admin.barberia.toggle') }}" method="POST" style="margin-top:16px;">
+                @csrf @method('PATCH')
+                @if($config?->estado)
+                <button type="submit" class="toggle-btn toggle-btn--close" style="width:100%;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                  </svg>
+                  Cerrar Barbería
+                </button>
+                @else
+                <button type="submit" class="toggle-btn toggle-btn--open" style="width:100%;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  </svg>
+                  Abrir Barbería
+                </button>
+                @endif
+              </form>
+
             </div>
           </div>
+
+          {{-- Horario general --}}
           <div class="card">
-            <div class="card-hd"><span class="card-hd-title">Horario General</span></div>
+            <div class="card-hd">
+              <span class="card-hd-title">Horario Configurado</span>
+            </div>
             <div class="card-body">
-              @foreach([['Lunes – Viernes','8:00 AM – 8:00 PM'],['Sábado','9:00 AM – 6:00 PM'],['Domingo','Cerrado']] as $h)
               <div class="list-item">
                 <div class="li-info">
-                  <div class="li-name">{{ $h[0] }}</div>
-                  <div class="li-sub">{{ $h[1] }}</div>
+                  <div class="li-name">Apertura</div>
+                  <div class="li-sub">
+                    {{ \Carbon\Carbon::parse($config?->hora_apertura)->format('g:i A') }}
+                  </div>
                 </div>
-                @if($h[1] == 'Cerrado')<span class="badge badge--red">Cerrado</span>@else<span class="badge badge--green">Abierto</span>@endif
+                <span class="badge badge--green">Inicio</span>
               </div>
-              @endforeach
+              <div class="list-item">
+                <div class="li-info">
+                  <div class="li-name">Cierre</div>
+                  <div class="li-sub">
+                    {{ \Carbon\Carbon::parse($config?->hora_cierre)->format('g:i A') }}
+                  </div>
+                </div>
+                <span class="badge badge--red">Fin</span>
+              </div>
+              <div class="list-item">
+                <div class="li-info">
+                  <div class="li-name">Agenda</div>
+                  <div class="li-sub">
+                    {{ $config->estado ? 'Habilitada para citas' : 'Bloqueada — local cerrado' }}
+                  </div>
+                </div>
+                <span class="badge {{ $config->estado ? 'badge--green' : 'badge--red' }}">
+                  {{ $config?->estado ? 'Activa' : 'Bloqueada' }}
+                </span>
+              </div>
             </div>
           </div>
+
         </div>
+
+        {{-- Actualizar nombre, horarios --}}
         <div class="card" style="margin-top:20px;">
-          <div class="card-hd"><span class="card-hd-title">Información de la Barbería</span></div>
+          <div class="card-hd">
+            <span class="card-hd-title">Configuración del Negocio</span>
+          </div>
           <div class="card-body">
             <form action="{{ route('admin.barberia.update') }}" method="POST">
               @csrf @method('PUT')
               <div class="form-grid" style="gap:14px;">
+
                 <div class="field-wrap">
-                  <label class="field-lbl">Nombre</label>
-                  <div class="field-box"><input type="text" name="nombre" value="{{ $barberia->name ?? 'BladeBarber Premium' }}" placeholder="Barberia"></div>
+                  <label class="field-lbl">Nombre del Negocio</label>
+                  <div class="field-box">
+                    <input type="text" name="nombre_negocio"
+                      value="{{ $config?->nombre_negocio }}"
+                      placeholder="BladeBarber">
+                  </div>
                 </div>
+
                 <div class="field-wrap">
-                  <label class="field-lbl">Teléfono</label>
-                  <div class="field-box"><input type="tel" name="telefono" value="{{ $barberia->phone ?? '' }}" placeholder="+57 300 000 0000"></div>
+                  {{-- spacer --}}
                 </div>
-                <div class="field-wrap form-full">
-                  <label class="field-lbl">Dirección</label>
-                  <div class="field-box"><input type="text" name="address" value="{{ $barberia->address ?? '' }}" placeholder="Calle 123 # 45-67, Bogotá"></div>
+
+                <div class="field-wrap">
+                  <label class="field-lbl">Hora de Apertura</label>
+                  <div class="field-box">
+                    <input type="time" name="hora_apertura"
+                      value="{{ \Carbon\Carbon::parse($config?->hora_apertura)->format('H:i') }}">
+                  </div>
                 </div>
+
+                <div class="field-wrap">
+                  <label class="field-lbl">Hora de Cierre</label>
+                  <div class="field-box">
+                    <input type="time" name="hora_cierre"
+                      value="{{ \Carbon\Carbon::parse($config?->hora_cierre)->format('H:i') }}">
+                  </div>
+                </div>
+
               </div>
               <div class="form-actions" style="margin-top:16px;">
                 <button type="submit" class="btn-gold">
@@ -1105,12 +1154,13 @@
                     <polyline points="17 21 17 13 7 13 7 21" />
                     <polyline points="7 3 7 8 15 8" />
                   </svg>
-                  Guardar Información
+                  Guardar Configuración
                 </button>
               </div>
             </form>
           </div>
         </div>
+
       </div>
     </div>
   </div>

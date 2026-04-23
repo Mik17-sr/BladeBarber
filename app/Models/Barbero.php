@@ -13,6 +13,6 @@ class Barbero extends Model
 
     public function usuario()
     {
-        return $this->belongsTo(Usuario::class, 'id_usuario', 'id_usuario');
+        return $this->belongsTo(\App\Models\Usuario::class, 'id_barbero', 'id_usuario');                 
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barbero;
+use App\Models\Configuracion;
 use App\Models\User;
 use App\Models\Horario;
 use App\Models\Usuario;
@@ -79,23 +80,71 @@ class AdminController extends Controller
         return back();
     }
 
-    public function toggleBarber($id)
-    {
-        return back();
-    }
-
     public function updateSchedule(Request $request)
     {
         return back();
     }
-
-    public function toggleBarberia(Request $request)
+    
+    public function index()
     {
-        return back();
+        $config   = Configuracion::first(); 
+        $barberos = \App\Models\Barbero::with('usuario')->get();
+        return view('dashboard_admin', compact('config', 'barberos'));
+    }
+
+    public function toggleBarber($id)
+    {
+        $barbero = \App\Models\Barbero::findOrFail($id);
+        $nuevoEstado = $barbero->usuario->estado ? 0 : 1;
+        $barbero->usuario->update(['estado' => $nuevoEstado]);
+
+        return back()->with('success', $nuevoEstado ? 'Barbero activado.' : 'Barbero desactivado.');
+    }
+    public function updateConfig(Request $request)
+    {
+        $request->validate([
+            'nombre_negocio' => 'required|string|max:100',
+            'hora_apertura'  => 'required|date_format:H:i',
+            'hora_cierre'    => 'required|date_format:H:i|after:hora_apertura',
+        ]);
+
+        $config = Configuracion::instancia();
+        $config->update($request->only([
+            'nombre_negocio',
+            'hora_apertura',
+            'hora_cierre',
+        ]));
+
+        return back()->with('success', 'Configuración guardada.');
+    }
+
+    public function toggleBarberia()
+    {
+        $config         = Configuracion::first();
+        $config->estado = ! $config->estado;
+        $config->save();
+
+        $msg = $config->estado ? 'Barbería abierta. Agenda habilitada.' 
+                            : 'Barbería cerrada. Agenda bloqueada.';
+
+        return back()->with('success', $msg);
     }
 
     public function updateBarberia(Request $request)
     {
-        return back();
+        $request->validate([
+            'nombre_negocio' => 'required|string|max:100',
+            'hora_apertura'  => 'required|date_format:H:i',
+            'hora_cierre'    => 'required|date_format:H:i|after:hora_apertura',
+        ]);
+
+        $config = Configuracion::first();
+        $config->update($request->only([
+            'nombre_negocio',
+            'hora_apertura',
+            'hora_cierre',
+        ]));
+
+        return back()->with('success', 'Configuración guardada correctamente.');
     }
 }
