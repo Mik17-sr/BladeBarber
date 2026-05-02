@@ -108,7 +108,6 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         [AdminController::class, 'updateSchedule']
     )->name('schedule.update');
 
-    // Barbería — toggle estado y update config (UNA SOLA VEZ)
     Route::patch('/barberia/toggle',
         [AdminController::class, 'toggleBarberia']
     )->name('barberia.toggle');

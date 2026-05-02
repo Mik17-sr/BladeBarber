@@ -1095,10 +1095,10 @@
                 <div class="li-info">
                   <div class="li-name">Agenda</div>
                   <div class="li-sub">
-                    {{ $config->estado ? 'Habilitada para citas' : 'Bloqueada — local cerrado' }}
+                    {{ $config?->estado ? 'Habilitada para citas' : 'Bloqueada — local cerrado' }}
                   </div>
                 </div>
-                <span class="badge {{ $config->estado ? 'badge--green' : 'badge--red' }}">
+                <span class="badge {{ $config?->estado ? 'badge--green' : 'badge--red' }}">
                   {{ $config?->estado ? 'Activa' : 'Bloqueada' }}
                 </span>
               </div>
