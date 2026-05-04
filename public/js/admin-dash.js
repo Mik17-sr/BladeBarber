@@ -23,3 +23,18 @@ function checkMatch(){ const p2=document.getElementById('cp2').value; const p3=d
 function togglePwd(id,btn){ const i=document.getElementById(id); i.type=i.type==='password'?'text':'password'; }
 function previewAvatar(e){ const f=e.target.files[0]; if(f){const r=new FileReader(); r.onload=ev=>{ const avatars=document.querySelectorAll('.avatar-lg'); avatars.forEach(a=>{a.style.backgroundImage=`url(${ev.target.result})`;}); }; r.readAsDataURL(f);} }
 function previewPost(e){ const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=ev=>{ document.getElementById('postPreviewImg').src=ev.target.result; document.getElementById('postPreview').style.display='block'; }; r.readAsDataURL(f); } }
+function previewFoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = document.getElementById('avatarPreviewImg');
+        const letter = document.getElementById('avatarPreviewLetter');
+
+        img.src = e.target.result;
+        img.style.display = 'block';
+        if (letter) letter.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}

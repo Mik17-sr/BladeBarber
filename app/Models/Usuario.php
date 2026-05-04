@@ -22,6 +22,7 @@ class Usuario extends Authenticatable implements CanResetPassword
         'contrasena',
         'rol',
         'estado',
+        'foto',  
     ];
 
     protected $hidden = ['contrasena'];

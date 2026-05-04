@@ -141,9 +141,16 @@
     </nav>
 
     <div class="sidebar-foot">
-      <div class="avatar-sm">A</div>
+      <div class="avatar-sm">
+        @if(auth()->user()->foto)
+        <img src="{{ asset('storage/' . auth()->user()->foto) }}"
+          style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+        @else
+        {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+        @endif
+      </div>
       <div class="foot-info">
-        <div class="foot-name">{{ auth()->user()->name ?? 'Admin' }}</div>
+        <div class="foot-name">{{ auth()->user()->nombre ?? 'Admin' }}</div>
         <div class="foot-role">ADMINISTRADOR</div>
       </div>
       <form action="{{ route('logout') }}" method="POST" style="display:inline;">
@@ -188,7 +195,7 @@
       <div class="panel active" id="panel-welcome">
         <div class="welcome-banner">
           <div class="welcome-tag">Panel de Administración</div>
-          <div class="welcome-title">Bienvenido,<br>{{ auth()->user()->name ?? 'Admin' }}</div>
+          <div class="welcome-title">Bienvenido,<br>{{ auth()->user()->nombre ?? 'Admin' }}</div>
           <div class="welcome-sub">Gestiona tu barbería desde aquí.</div>
           <div class="welcome-time">
             <div class="time" id="clock">--:--</div>
@@ -298,7 +305,12 @@
       <div class="panel" id="panel-profile-view">
         <div class="profile-hero">
           <div class="avatar-lg">
-            A
+            @if(auth()->user()->foto)
+            <img src="{{ asset('storage/' . auth()->user()->foto) }}"
+              style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+            @else
+            {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+            @endif
             <div class="avatar-overlay">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
@@ -307,7 +319,7 @@
             </div>
           </div>
           <div class="profile-info">
-            <div class="profile-name">{{ auth()->user()->name ?? 'Administrador' }}</div>
+            <div class="profile-name">{{ auth()->user()->nombre ?? 'Administrador' }}</div>
             <div class="profile-email">{{ auth()->user()->email ?? 'admin@barberos.com' }}</div>
             <div class="profile-tags">
               <span class="profile-tag">Administrador</span>
@@ -323,7 +335,7 @@
               <div class="list-item">
                 <div class="li-info">
                   <div class="li-name">Nombre</div>
-                  <div class="li-sub">{{ auth()->user()->name ?? 'Admin User' }}</div>
+                  <div class="li-sub">{{ auth()->user()->nombre ?? 'Admin User' }}</div>
                 </div>
               </div>
               <div class="list-item">
@@ -335,7 +347,7 @@
               <div class="list-item">
                 <div class="li-info">
                   <div class="li-name">Teléfono</div>
-                  <div class="li-sub">{{ auth()->user()->phone ?? '+57 300 000 0000' }}</div>
+                  <div class="li-sub">{{ auth()->user()->telefono ?? '+57 300 000 0000' }}</div>
                 </div>
               </div>
               <div class="list-item">
@@ -371,15 +383,25 @@
       <!-- ===== EDITAR PERFIL ===== -->
       <div class="panel" id="panel-profile-edit">
         <div class="profile-hero" style="margin-bottom:24px;">
-          <div class="avatar-lg" onclick="document.getElementById('avatarInput').click()">
-            A
+          <div class="avatar-lg" style="cursor:pointer;flex-shrink:0;"
+            onclick="document.getElementById('fotoInput').click()">
+            @if(auth()->user()->foto)
+            <img id="avatarPreviewImg"
+              src="{{ asset('storage/' . auth()->user()->foto) }}"
+              style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+            @else
+            <span id="avatarPreviewLetter">
+              {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+            </span>
+            <img id="avatarPreviewImg" src=""
+              style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;">
+            @endif
             <div class="avatar-overlay">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                 <circle cx="12" cy="13" r="4" />
               </svg>
             </div>
-            <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="previewAvatar(event)">
           </div>
           <div class="profile-info">
             <div class="profile-name">Editar Perfil</div>
@@ -392,40 +414,78 @@
             <form action="{{ route('admin.profile.update') }}" method="POST" enctype="multipart/form-data">
               @csrf @method('PUT')
               <div class="form-grid" style="gap:16px;">
+
                 <div class="field-wrap">
                   <label class="field-lbl">Nombre</label>
-                  <div class="field-box"><input type="text" name="name" value="{{ auth()->user()?->name }}" placeholder="Tu nombre completo"></div>
+                  <div class="field-box">
+                    <input type="text"
+                      name="nombre"
+                      value="{{ auth()->user()->nombre }}"
+                      placeholder="Tu nombre completo">
+                  </div>
                 </div>
+
                 <div class="field-wrap">
                   <label class="field-lbl">Correo Electrónico</label>
-                  <div class="field-box"><input type="email" name="email" value="{{ auth()->user()?->email }}" placeholder="correo@ejemplo.com"></div>
+                  <div class="field-box">
+                    <input type="email"
+                      name="email"
+                      value="{{ auth()->user()->email }}"
+                      placeholder="correo@ejemplo.com">
+                  </div>
                 </div>
+
+                <div class="field-wrap">
+                  <label class="field-lbl">Usuario</label>
+                  <div class="field-box">
+                    <input type="text"
+                      name="usuario"
+                      value="{{ auth()->user()->usuario }}"
+                      placeholder="usuario_login">
+                  </div>
+                </div>
+
                 <div class="field-wrap">
                   <label class="field-lbl">Teléfono</label>
-                  <div class="field-box"><input type="tel" name="phone" value="{{ auth()->user()?->phone }}" placeholder="+57 300 000 0000"></div>
-                </div>
-                <div class="field-wrap">
-                  <label class="field-lbl">Ciudad</label>
-                  <div class="field-box"><input type="text" name="city" value="{{ auth()->user()?->city }}" placeholder="Bogotá"></div>
-                </div>
-                <div class="field-wrap form-full">
-                  <label class="field-lbl">Descripción</label>
-                  <textarea class="field-ta" name="bio" placeholder="Cuéntanos sobre ti...">{{ auth()->user()?->bio }}</textarea>
+                  <div class="field-box">
+                    <input type="tel"
+                      name="telefono"
+                      value="{{ auth()->user()->telefono }}"
+                      placeholder="+57 300 000 0000">
+                  </div>
                 </div>
                 <div class="field-wrap form-full">
                   <label class="field-lbl">Foto de Perfil</label>
-                  <div class="field-box"><input type="file" name="avatar" accept="image/*"></div>
+                  <label class="upload-btn" style="height:48px;border-radius:var(--radius);justify-content:center;cursor:pointer;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    Seleccionar imagen
+                    <input
+                      type="file"
+                      id="fotoInput"
+                      name="foto"
+                      accept="image/*"
+                      onchange="previewFoto(event)"
+                      style="display:none">
+                  </label>
+
+                  {{-- Nombre del archivo seleccionado --}}
+                  <div id="fotoNombre" style="font-size:12px;color:var(--muted2);margin-top:6px;">
+                    Ningún archivo seleccionado
+                  </div>
+
+                  {{-- Preview --}}
+                  <div id="fotoPreviewBox" style="display:none;margin-top:10px;">
+                    <img id="fotoPreviewImg" src="" alt="Preview"
+                      style="width:80px;height:80px;object-fit:cover;border-radius:50%;border:2px solid var(--gold);">
+                  </div>
                 </div>
               </div>
               <div class="form-actions" style="margin-top:20px;">
-                <button type="submit" class="btn-gold">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                    <polyline points="17 21 17 13 7 13 7 21" />
-                    <polyline points="7 3 7 8 15 8" />
-                  </svg>
-                  Guardar Cambios
-                </button>
+                <button type="submit" class="btn-gold">Guardar Cambios</button>
                 <button type="button" class="btn-outline" onclick="showPanel('profile-view')">Cancelar</button>
               </div>
             </form>

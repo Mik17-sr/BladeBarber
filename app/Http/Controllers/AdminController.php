@@ -15,54 +15,76 @@ class AdminController extends Controller
 {
 
     public function storeBarber(Request $request)
-{
-    $request->validate([
-        'nombre'=>'required',
-        'email'=>'required|email|unique:usuarios,email',
-        'usuario'=>'required|unique:usuarios,usuario',
-        'contrasena'=>'required|min:8'
-    ]);
-
-    $usuario = Usuario::create([
-        'nombre' => $request->nombre,
-        'email' => $request->email,
-        'usuario' => $request->usuario,
-        'telefono' => $request->telefono,
-        'contrasena' => bcrypt($request->contrasena),
-        'rol' => 'barbero',
-        'estado' => 1
-    ]);
-
-
-    $barbero = Barbero::create([
-        'id_barbero' => $usuario->id_usuario
-    ]);
-
-
-    $dias = [
-      'Lunes'=>1,
-      'Martes'=>2,
-      'Miercoles'=>3,
-      'Jueves'=>4,
-      'Viernes'=>5,
-      'Sabado'=>6
-    ];
-
-    foreach($request->horarios as $dia=>$h){
-
-        Horario::create([
-            'id_barbero' => $barbero->id_barbero,
-            'dia' => $dias[$dia],
-            'hora_inicio' => $h['inicio'],
-            'hora_fin' => $h['fin']
+    {
+        $request->validate([
+            'nombre' => 'required',
+            'email' => 'required|email|unique:usuarios,email',
+            'usuario' => 'required|unique:usuarios,usuario',
+            'contrasena' => 'required|min:8'
         ]);
-    }
 
-    return back()->with('success','Barbero registrado');
-}
+        $usuario = Usuario::create([
+            'nombre' => $request->nombre,
+            'email' => $request->email,
+            'usuario' => $request->usuario,
+            'telefono' => $request->telefono,
+            'contrasena' => bcrypt($request->contrasena),
+            'rol' => 'barbero',
+            'estado' => 1
+        ]);
+
+
+        $barbero = Barbero::create([
+            'id_barbero' => $usuario->id_usuario
+        ]);
+
+
+        $dias = [
+            'Lunes' => 1,
+            'Martes' => 2,
+            'Miercoles' => 3,
+            'Jueves' => 4,
+            'Viernes' => 5,
+            'Sabado' => 6
+        ];
+
+        foreach ($request->horarios as $dia => $h) {
+
+            Horario::create([
+                'id_barbero' => $barbero->id_barbero,
+                'dia' => $dias[$dia],
+                'hora_inicio' => $h['inicio'],
+                'hora_fin' => $h['fin']
+            ]);
+        }
+
+        return back()->with('success', 'Barbero registrado');
+    }
     public function updateProfile(Request $request)
     {
-        return back();
+        $user = auth()->user();
+
+        $request->validate([
+            'nombre'   => 'required|string|max:100',
+            'email'    => 'required|email|unique:usuarios,email,' . $user->id_usuario . ',id_usuario',
+            'usuario'  => 'required|string|max:50|unique:usuarios,usuario,' . $user->id_usuario . ',id_usuario',
+            'telefono' => 'nullable|string|max:20',
+            'foto'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        $data = $request->only(['nombre', 'email', 'usuario', 'telefono']);
+
+        if ($request->hasFile('foto')) {
+            if ($user->foto) {
+                \Storage::disk('public')->delete($user->foto);
+            }
+            // Guardar nueva
+            $data['foto'] = $request->file('foto')->store('avatars', 'public');
+        }
+
+        $user->update($data);
+
+        return back()->with('success', 'Perfil actualizado correctamente.');
     }
 
     public function updatePassword(Request $request)
@@ -84,10 +106,10 @@ class AdminController extends Controller
     {
         return back();
     }
-    
+
     public function index()
     {
-        $config   = Configuracion::first(); 
+        $config   = Configuracion::first();
         $barberos = \App\Models\Barbero::with('usuario')->get();
         return view('dashboard_admin', compact('config', 'barberos'));
     }
@@ -124,8 +146,8 @@ class AdminController extends Controller
         $config->estado = ! $config->estado;
         $config->save();
 
-        $msg = $config->estado ? 'Barbería abierta. Agenda habilitada.' 
-                            : 'Barbería cerrada. Agenda bloqueada.';
+        $msg = $config->estado ? 'Barbería abierta. Agenda habilitada.'
+            : 'Barbería cerrada. Agenda bloqueada.';
 
         return back()->with('success', $msg);
     }
