@@ -323,7 +323,7 @@
             <div class="profile-email">{{ auth()->user()->email ?? 'admin@barberos.com' }}</div>
             <div class="profile-tags">
               <span class="profile-tag">Administrador</span>
-              <span class="profile-tag">BarberOS</span>
+              <span class="profile-tag">BladeBarber</span>
               <span class="profile-tag">Activo</span>
             </div>
           </div>
@@ -369,7 +369,7 @@
                 Editar Perfil
               </button>
               <button class="btn-outline" onclick="showPanel('change-pass')" style="width:100%;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="field-icon">
                   <rect x="3" y="11" width="18" height="11" rx="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
@@ -625,7 +625,7 @@
               </div>
             </div>
             <div class="post-body">
-              <p class="post-text">¡Bienvenidos a BarberOS! Estamos listos para atenderte con los mejores barberos de la ciudad. Reserva tu cita hoy.</p>
+              <p class="post-text">¡Bienvenidos a BladeBarber! Estamos listos para atenderte con los mejores barberos de la ciudad. Reserva tu cita hoy.</p>
             </div>
             <div class="post-footer">
               <button class="post-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
