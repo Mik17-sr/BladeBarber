@@ -6,5 +6,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class Publicacion extends Model
 {
-    //
+    protected $table='publicaciones';
+
+    protected $primaryKey='id_publicacion';
+    
+    public $timestamps = false;
+
+    protected $fillable=[
+       'id_muro',
+       'contenido',
+       'fecha'
+    ];
+
+    public function muro()
+    {
+    return $this->belongsTo(Muro::class,'id_barbero','id_usuario');
+    }
+
+    public function imagenes()
+    {
+        return $this->hasMany(Imagen::class, 'id_publicacion', 'id_publicacion');
+    }
 }

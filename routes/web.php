@@ -115,6 +115,9 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::put('/barberia/update',
         [AdminController::class, 'updateBarberia']
     )->name('barberia.update');
+
+    Route::put('/posts/{id}', [AdminController::class, 'updatePost'])->name('posts.update');
+    Route::delete('/posts/{id}', [AdminController::class, 'destroyPost'])->name('posts.destroy');
 });
 
 /*

@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Barbero;
 use App\Models\Configuracion;
+use App\Models\Publicacion;
 use App\Models\User;
 use App\Models\Horario;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Muro;
+use App\Models\Imagen;
 
 class AdminController extends Controller
 {
@@ -94,13 +97,33 @@ class AdminController extends Controller
 
     public function storePost(Request $request)
     {
-        return back();
-    }
+        $request->validate([
+            'content'  => 'required|string',
+            'image'    => 'nullable|image|max:2048',
+        ]);
 
-    public function destroyPost($id)
-    {
-        return back();
-    }
+        $muro = Muro::firstOrCreate(
+            ['id_usuario' => auth()->user()->id_usuario]
+        );
+
+        $publicacion = Publicacion::create([
+            'id_muro'   => $muro->id_muro,
+            'contenido' => $request->content,
+            'fecha'     => now()->toDateString(),
+        ]);
+
+
+        if ($request->hasFile('image')) {
+            $ruta = $request->file('image')->store('publicaciones', 'public');
+
+            Imagen::create([
+                'id_publicacion' => $publicacion->id_publicacion,
+                'imagen'         => $ruta,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Publicación creada.');
+    } 
 
     public function updateSchedule(Request $request)
     {
@@ -109,14 +132,18 @@ class AdminController extends Controller
 
     public function index()
     {
+        $posts = Publicacion::with(['imagenes', 'muro.usuario'])
+                ->orderBy('fecha', 'desc')
+                ->get();
         $config   = Configuracion::first();
-        $barberos = \App\Models\Barbero::with('usuario')->get();
-        return view('dashboard_admin', compact('config', 'barberos'));
+        $barberos = Barbero::with('usuario')->get();
+        return view('dashboard_admin', compact('posts', 'config', 'barberos'));
+        
     }
 
     public function toggleBarber($id)
     {
-        $barbero = \App\Models\Barbero::findOrFail($id);
+        $barbero = Barbero::findOrFail($id);
         $nuevoEstado = $barbero->usuario->estado ? 0 : 1;
         $barbero->usuario->update(['estado' => $nuevoEstado]);
 
@@ -168,5 +195,30 @@ class AdminController extends Controller
         ]));
 
         return back()->with('success', 'Configuración guardada correctamente.');
+    }
+
+    public function updatePost(Request $request, $id)
+    {
+        $publicacion = Publicacion::findOrFail($id);
+        $publicacion->update([
+            'contenido' => $request->contenido,
+        ]);
+
+        return redirect()->back()->with('success', 'Publicación actualizada.');
+    }
+
+    public function destroyPost($id)
+    {
+        $publicacion = Publicacion::findOrFail($id);
+
+        // Eliminar imágenes del storage
+        foreach ($publicacion->imagenes as $img) {
+            \Storage::disk('public')->delete($img->imagen);
+            $img->delete();
+        }
+
+        $publicacion->delete();
+
+        return redirect()->back()->with('success', 'Publicación eliminada.');
     }
 }

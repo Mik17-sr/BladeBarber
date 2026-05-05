@@ -38,3 +38,13 @@ function previewFoto(event) {
     };
     reader.readAsDataURL(file);
 }
+
+function abrirEditar(id, contenido) {
+    document.getElementById('editContenido').value = contenido;
+    document.getElementById('formEditar').action = '/BladeBarber/public/admin/posts/' + id;
+    document.getElementById('modalEditar').style.display = 'flex';
+}
+
+function cerrarEditar() {
+    document.getElementById('modalEditar').style.display = 'none';
+}
