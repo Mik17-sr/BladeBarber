@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ClienteController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -56,17 +57,26 @@ Route::post('/reset-password', function (Request $request) {
 | Dashboards
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/dashboard_admin',
         [AdminController::class, 'index']
     )->name('dashboard.admin');
 
+});
+
+Route::middleware(['auth', 'role:barbero'])->group(function () {
+
     Route::view('/dashboard_barbero', 'dashboard_barbero')
         ->name('dashboard.barbero');
 
-    Route::view('/dashboard_cliente', 'dashboard_cliente')
-        ->name('dashboard.cliente');
+});
+
+Route::middleware(['auth', 'role:cliente'])->group(function () {
+
+    Route::get('/dashboard_cliente', [ClienteController::class, 'dashboard'])
+    ->name('dashboard.cliente');
+
 });
 
 /*
@@ -74,7 +84,10 @@ Route::middleware('auth')->group(function () {
 | Admin
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
 
     // Perfil
     Route::put('/profile/update',
@@ -125,7 +138,10 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 | Barbero
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->prefix('barber')->name('barber.')->group(function () {
+Route::middleware(['auth', 'role:barbero'])
+    ->prefix('barber')
+    ->name('barber.')
+    ->group(function () {
 
     Route::put('/profile/update',
         [BarberoController::class, 'updateProfile']

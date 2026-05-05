@@ -18,9 +18,13 @@ class Publicacion extends Model
        'fecha'
     ];
 
+    protected $casts = [
+        'fecha' => 'datetime',
+    ];
+
     public function muro()
     {
-    return $this->belongsTo(Muro::class,'id_barbero','id_usuario');
+        return $this->belongsTo(Muro::class, 'id_muro', 'id_muro');
     }
 
     public function imagenes()
