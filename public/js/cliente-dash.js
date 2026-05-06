@@ -165,7 +165,7 @@ function selectBarber(el, nombre, idBarbero) {
     el.classList.add('selected');
     sumBarber         = nombre;
     selectedBarberoId = idBarbero;
-
+    cargarHorasOcupadas();
     if (!calYear || !calMonth === undefined) {
         const hoy = new Date();
         calYear  = hoy.getFullYear();
@@ -261,6 +261,7 @@ function renderCal() {
             cell.className = 'cal-day';
             if (selectedDate === fechaStr) cell.classList.add('selected');
             cell.onclick = () => selectDay(cell, fechaStr, horarioDia);
+            cargarHorasOcupadas();
         }
 
         // Marcar hoy
@@ -297,6 +298,7 @@ function selectDay(el, fechaStr, horarioDia) {
     document.getElementById('sumTime').textContent = '—';
 
     renderTimeSlots(fechaStr, horarioDia);
+    cargarHorasOcupadas();
 }
 
 function renderTimeSlots(fechaStr, horarioDia) {
@@ -436,3 +438,32 @@ function publicar() {
 
 // ── INIT
 document.addEventListener('DOMContentLoaded', initCal);
+let horasOcupadas = [];
+
+async function cargarHorasOcupadas() {
+    if (!selectedBarberoId || !selectedDate) return;
+
+    const res = await fetch(
+        `${APP_URL}/citas/horas-ocupadas?barbero=${selectedBarberoId}&fecha=${selectedDate}`
+    );
+
+    horasOcupadas = await res.json();
+
+    aplicarBloqueos();
+}
+
+function aplicarBloqueos() {
+    document.querySelectorAll('.time-slot').forEach(slot => {
+        const hora = slot.textContent.trim();
+        const horaNorm = hora.length === 4 ? '0' + hora : hora;
+
+        if (horasOcupadas.includes(horaNorm)) {
+            slot.classList.add('unavail');
+            slot.onclick = null;
+        } else {
+            slot.classList.remove('unavail');
+            slot.onclick = () => selectTime(slot, hora);
+        }
+    });
+}
+

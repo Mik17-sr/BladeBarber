@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barbero;
+use App\Models\Cita;
 use App\Models\Publicacion;
 use App\Models\Servicio;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ClienteController extends Controller
 {
@@ -22,6 +24,11 @@ class ClienteController extends Controller
         'imagenes'
         ])->orderBy('fecha', 'desc')->get();
 
-        return view('dashboard_cliente', compact('publicaciones', 'servicios', 'barberos'));
+        $idCliente = Auth::user()->cliente->id_cliente;
+        $citas = Cita::with('barbero.usuario')
+            ->where('id_cliente', $idCliente)
+            ->get();
+
+        return view('dashboard_cliente', compact('publicaciones', 'servicios', 'barberos', 'citas'));
     }
 }

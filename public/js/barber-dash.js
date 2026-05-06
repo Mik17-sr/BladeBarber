@@ -9,3 +9,7 @@ function checkMatch(){ const p2=document.getElementById('cp2').value; const p3=d
 function togglePwd(id){ const i=document.getElementById(id); i.type=i.type==='password'?'text':'password'; }
 function previewAvatar(e){ const f=e.target.files[0]; if(f){const r=new FileReader(); r.onload=ev=>{ document.querySelectorAll('.avatar-lg').forEach(a=>{a.style.backgroundImage=`url(${ev.target.result})`;a.style.backgroundSize='cover';}); }; r.readAsDataURL(f);} }
 function previewPost(e){ const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=ev=>{ document.getElementById('postPreviewImg').src=ev.target.result; document.getElementById('postPreview').style.display='block'; }; r.readAsDataURL(f); } }
+
+const params = new URLSearchParams(window.location.search);
+const panelParam = params.get('panel');
+if (panelParam) showPanel(panelParam);

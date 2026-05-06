@@ -48,6 +48,18 @@ class CitaController extends Controller
         return response()->json([
             'horarios' => $horarios,
             'citas'    => [],
-        ]);
+       
+            ]);
+    }
+    public function horasOcupadas(Request $request)
+    {
+    $horas = Cita::where('id_barbero', $request->barbero)
+        ->whereDate('hora_cita', $request->fecha)
+        ->whereIn('estado', ['Pendiente', 'Confirmada'])
+        ->pluck('hora_cita')
+        ->map(fn($h) => \Carbon\Carbon::parse($h)->format('H:i'))
+        ->values();
+
+    return response()->json($horas);
     }
 }

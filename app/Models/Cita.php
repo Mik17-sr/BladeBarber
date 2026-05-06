@@ -26,18 +26,18 @@ class Cita extends Model
         return $this->belongsTo(Cliente::class, 'id_cliente', 'id_cliente');
     }
 
+    public function servicios()
+    {
+        return $this->belongsToMany(Servicio::class, 'cita_servicio', 'id_cita', 'id_servicio');
+    }
+
     public function barbero()
     {
         return $this->belongsTo(Barbero::class, 'id_barbero', 'id_barbero');
     }
-
-    public function servicios()
+    
+    public function pago()
     {
-        return $this->belongsToMany(
-            Servicio::class,
-            'cita_servicio',
-            'id_cita',
-            'id_servicio'
-        );
+        return $this->hasOne(Pago::class, 'id_cita');
     }
 }

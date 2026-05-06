@@ -58,4 +58,9 @@ class Usuario extends Authenticatable implements CanResetPassword
     {
         return $this->hasOne(Cliente::class, 'id_cliente', 'id_usuario');
     }
+
+    public function barbero()
+    {
+        return $this->hasOne(Barbero::class, 'id_barbero', 'id_usuario');
+    }
 }

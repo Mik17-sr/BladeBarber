@@ -10,10 +10,10 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
+    {/*
         Schema::table('imagenes', function (Blueprint $table) {
             $table->string('imagen')->nullable()->after('id_publicacion');
-        });
+        });*/
     }
 
     public function down(): void

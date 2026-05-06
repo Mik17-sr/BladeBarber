@@ -16,8 +16,8 @@ return new class extends Migration
             $table->date('fecha_cita');
             $table->time('hora_cita');
             $table->enum('estado', ['Pendiente', 'Completada', 'Cancelada'])->default('Pendiente');
-            $table->integer('id_cliente')->unsigned();
-            $table->integer('id_barbero')->unsigned();
+            $table->unsignedBigInteger('id_cliente');
+            $table->unsignedBigInteger('id_barbero');
             $table->timestamps();
 
             $table->foreign('id_cliente')->references('id_cliente')->on('clientes')->onDelete('cascade');

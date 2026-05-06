@@ -68,8 +68,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
 Route::middleware(['auth', 'role:barbero'])->group(function () {
 
-    Route::view('/dashboard_barbero', 'dashboard_barbero')
-        ->name('dashboard.barbero');
+    Route::get('/dashboard_barbero',
+        [BarberoController::class, 'dashboard']
+    )->name('dashboard.barbero');
 
 });
 
@@ -170,4 +171,21 @@ Route::middleware(['auth', 'role:barbero'])
     Route::delete('/posts/{id}',
         [BarberoController::class, 'destroyPost']
     )->name('posts.destroy');
+
+
+    Route::get('/agenda', [BarberoController::class, 'agenda'])
+            ->name('agenda');
+
+    Route::patch('/citas/{idCita}/estado', [BarberoController::class, 'updateEstado'])
+            ->name('citas.estado');
+
+    Route::delete('/citas/{idCita}', [BarberoController::class, 'cancelar'])
+            ->name('citas.cancelar');
+
+    Route::get('/atender', [BarberoController::class, 'atenderPanel'])->name('atender');
+    Route::post('/atender/{id}', [BarberoController::class, 'completarCita'])->name('atender.completar');
 });
+
+Route::get('/citas/horas-ocupadas', [CitaController::class, 'horasOcupadas'])
+    ->name('citas.horasOcupadas')
+    ->middleware('auth');
