@@ -140,15 +140,30 @@
         </svg>
         Estado Barbería
       </button>
+      <div class="nav-label">Servicios</div>
+
+      <button class="nav-item" onclick="showPanel('service-register')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 7L10 17l-5-5" />
+        </svg>
+        Registrar Servicio
+      </button>
+      <button class="nav-item" onclick="showPanel('services-list')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        Ver Servicios
+      </button>
+
     </nav>
 
     <div class="sidebar-foot">
       <div class="avatar-sm">
         @if(auth()->user()->foto)
-          <img src="{{ asset('storage/' . auth()->user()->foto) }}"
-            style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+        <img src="{{ asset('storage/' . auth()->user()->foto) }}"
+          style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
         @else
-          {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+        {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
         @endif
       </div>
       <div class="foot-info">
@@ -309,10 +324,10 @@
         <div class="profile-hero">
           <div class="avatar-lg">
             @if(auth()->user()->foto)
-              <img src="{{ asset('storage/' . auth()->user()->foto) }}"
-                style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+            <img src="{{ asset('storage/' . auth()->user()->foto) }}"
+              style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
             @else
-              {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+            {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
             @endif
             <div class="avatar-overlay">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -389,14 +404,14 @@
           <div class="avatar-lg" style="cursor:pointer;flex-shrink:0;"
             onclick="document.getElementById('fotoInput').click()">
             @if(auth()->user()->foto)
-              <img id="avatarPreviewImg" src="{{ asset('storage/' . auth()->user()->foto) }}"
-                style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+            <img id="avatarPreviewImg" src="{{ asset('storage/' . auth()->user()->foto) }}"
+              style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
             @else
-              <span id="avatarPreviewLetter">
-                {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
-              </span>
-              <img id="avatarPreviewImg" src=""
-                style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;">
+            <span id="avatarPreviewLetter">
+              {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+            </span>
+            <img id="avatarPreviewImg" src=""
+              style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;">
             @endif
             <div class="avatar-overlay">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -576,70 +591,70 @@
         </div>
         <div class="posts-list">
           @forelse($posts ?? [] as $post)
-            <div class="post-card">
-              <div class="post-head">
-                <div class="li-avatar">
-                  {{ strtoupper(substr($post->muro->usuario->nombre ?? 'A', 0, 1)) }}
-                </div>
-                <div class="post-meta">
-                  <div class="post-author">{{ $post->muro->usuario->nombre ?? 'Admin' }}</div>
-                  <div class="post-time">{{ \Carbon\Carbon::parse($post->fecha)->diffForHumans() }}</div>
-                </div>
+          <div class="post-card">
+            <div class="post-head">
+              <div class="li-avatar">
+                {{ strtoupper(substr($post->muro->usuario->nombre ?? 'A', 0, 1)) }}
+              </div>
+              <div class="post-meta">
+                <div class="post-author">{{ $post->muro->usuario->nombre ?? 'Admin' }}</div>
+                <div class="post-time">{{ \Carbon\Carbon::parse($post->fecha)->diffForHumans() }}</div>
+              </div>
 
-                {{-- Botones editar y eliminar --}}
-                <div style="display:flex;gap:8px;margin-left:auto;">
+              {{-- Botones editar y eliminar --}}
+              <div style="display:flex;gap:8px;margin-left:auto;">
 
-                  {{-- Editar --}}
-                  <button type="button" title="Editar"
-                    onclick='abrirEditar({{ $post->id_publicacion }}, @json($post->contenido))' style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+                {{-- Editar --}}
+                <button type="button" title="Editar"
+                  onclick='abrirEditar({{ $post->id_publicacion }}, @json($post->contenido))' style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
                           border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--gold);
                           display:flex;align-items:center;gap:6px;font-size:12px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Editar
+                </button>
+
+                {{-- Eliminar --}}
+                <form action="{{ route('admin.posts.destroy', $post->id_publicacion) }}" method="POST">
+                  @csrf @method('DELETE')
+                  <button class="post-del" type="submit" title="Eliminar"
+                    onclick="return confirm('¿Eliminar esta publicación?')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v6M14 11v6" />
+                      <path d="M9 6V4h6v2" />
                     </svg>
-                    Editar
                   </button>
-
-                  {{-- Eliminar --}}
-                  <form action="{{ route('admin.posts.destroy', $post->id_publicacion) }}" method="POST">
-                    @csrf @method('DELETE')
-                    <button class="post-del" type="submit" title="Eliminar"
-                      onclick="return confirm('¿Eliminar esta publicación?')">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6l-1 14H6L5 6" />
-                        <path d="M10 11v6M14 11v6" />
-                        <path d="M9 6V4h6v2" />
-                      </svg>
-                    </button>
-                  </form>
-                </div>
-              </div>
-
-              {{-- Imágenes de la publicación --}}
-              @foreach($post->imagenes as $img)
-                <img src="{{ asset('storage/' . $img->imagen) }}" alt="Imagen" class="post-img">
-              @endforeach
-
-              <div class="post-body">
-                <p class="post-text">{{ $post->contenido }}</p>
-              </div>
-
-              <div class="post-footer">
-                <button class="post-action">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path
-                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                  </svg> 0
-                </button>
-                <button class="post-action">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg> 0
-                </button>
+                </form>
               </div>
             </div>
+
+            {{-- Imágenes de la publicación --}}
+            @foreach($post->imagenes as $img)
+            <img src="{{ asset('storage/' . $img->imagen) }}" alt="Imagen" class="post-img">
+            @endforeach
+
+            <div class="post-body">
+              <p class="post-text">{{ $post->contenido }}</p>
+            </div>
+
+            <div class="post-footer">
+              <button class="post-action">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path
+                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg> 0
+              </button>
+              <button class="post-action">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg> 0
+              </button>
+            </div>
+          </div>
           @empty
 
           @endforelse
@@ -739,49 +754,49 @@
           </button>
         </div>
         @if(session('success'))
-          <div class="feedback feedback--ok" style="margin-bottom:16px;">
-            {{ session('success') }}
-          </div>
+        <div class="feedback feedback--ok" style="margin-bottom:16px;">
+          {{ session('success') }}
+        </div>
         @endif
         <div class="barbers-grid">
           @forelse($barberos ?? [] as $barbero)
-            <div class="barber-card">
-              <div class="barber-card-top">
-                <div class="barber-avatar">
-                  {{ substr(optional($barbero->usuario)->nombre ?? 'B', 0, 1) }}
-                </div>
-                <div>
-                  <div class="barber-name">{{ optional($barbero->usuario)->nombre ?? 'Sin nombre' }}</div>
-                  <div class="barber-spec">{{ optional($barbero->usuario)->especialidad ?? 'Barbero' }}</div>
-                  <span class="badge {{ optional($barbero->usuario)->estado ? 'badge--green' : 'badge--red' }}">
-                    {{ optional($barbero->usuario)->estado ? 'Activo' : 'Inactivo' }}
-                  </span>
-                </div>
+          <div class="barber-card">
+            <div class="barber-card-top">
+              <div class="barber-avatar">
+                {{ substr(optional($barbero->usuario)->nombre ?? 'B', 0, 1) }}
               </div>
-              <div class="barber-stats">
-                <div class="barber-stat">
-                  <div class="barber-stat-val">{{ optional($barbero->usuario)->telefono ?? '—' }}</div>
-                  <div class="barber-stat-lbl">Teléfono</div>
-                </div>
-                <div class="barber-stat">
-                  <div class="barber-stat-val" style="font-size:10px;">{{ optional($barbero->usuario)->email ?? '—' }}
-                  </div>
-                  <div class="barber-stat-lbl">Correo</div>
-                </div>
-              </div>
-              <div class="barber-actions">
-                <form action="{{ route('admin.barbers.toggle', $barbero->id_barbero) }}" method="POST" style="flex:1;">
-                  @csrf @method('PATCH')
-                  <button type="submit"
-                    class="barber-toggle {{ optional($barbero->usuario)->estado ? 'barber-toggle--active' : 'barber-toggle--inactive' }}"
-                    style="width:100%;">
-                    {{ optional($barbero->usuario)->estado ? 'Desactivar' : 'Activar' }}
-                  </button>
-                </form>
+              <div>
+                <div class="barber-name">{{ optional($barbero->usuario)->nombre ?? 'Sin nombre' }}</div>
+                <div class="barber-spec">{{ optional($barbero->usuario)->especialidad ?? 'Barbero' }}</div>
+                <span class="badge {{ optional($barbero->usuario)->estado ? 'badge--green' : 'badge--red' }}">
+                  {{ optional($barbero->usuario)->estado ? 'Activo' : 'Inactivo' }}
+                </span>
               </div>
             </div>
+            <div class="barber-stats">
+              <div class="barber-stat">
+                <div class="barber-stat-val">{{ optional($barbero->usuario)->telefono ?? '—' }}</div>
+                <div class="barber-stat-lbl">Teléfono</div>
+              </div>
+              <div class="barber-stat">
+                <div class="barber-stat-val" style="font-size:10px;">{{ optional($barbero->usuario)->email ?? '—' }}
+                </div>
+                <div class="barber-stat-lbl">Correo</div>
+              </div>
+            </div>
+            <div class="barber-actions">
+              <form action="{{ route('admin.barbers.toggle', $barbero->id_barbero) }}" method="POST" style="flex:1;">
+                @csrf @method('PATCH')
+                <button type="submit"
+                  class="barber-toggle {{ optional($barbero->usuario)->estado ? 'barber-toggle--active' : 'barber-toggle--inactive' }}"
+                  style="width:100%;">
+                  {{ optional($barbero->usuario)->estado ? 'Desactivar' : 'Activar' }}
+                </button>
+              </form>
+            </div>
+          </div>
           @empty
-            <p style="color:var(--muted2);padding:20px;">No hay barberos registrados aún.</p>
+          <p style="color:var(--muted2);padding:20px;">No hay barberos registrados aún.</p>
           @endforelse
         </div>
       </div>
@@ -801,18 +816,18 @@
             Información del Barbero
           </div>
           @if ($errors->any())
-            <div style="
+          <div style="
                       background:#2a0f12;
                       color:#ffb3b3;
                       padding:15px;
                       border-radius:12px;
                       margin-bottom:20px;">
-              <ul style="margin:0;padding-left:18px;">
-                @foreach ($errors->all() as $error)
-                  <li>{{ $error }}</li>
-                @endforeach
-              </ul>
-            </div>
+            <ul style="margin:0;padding-left:18px;">
+              @foreach ($errors->all() as $error)
+              <li>{{ $error }}</li>
+              @endforeach
+            </ul>
+          </div>
           @endif
           <form action="{{ route('admin.barbers.store') }}" method="POST">
             @csrf
@@ -870,15 +885,15 @@
             <h3>Horario semanal</h3>
             <div class="hours-grid">
               @foreach(['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'] as $dia)
-                <div class="hour-day">
-                  <div class="hour-label">{{ $dia }}</div>
-                  <input type="time" name="horarios[{{ $dia }}][inicio]" value="08:00" class="hour-input">
-                  <input type="time" name="horarios[{{ $dia }}][fin]" value="18:00" class="hour-input">
-                  <label>
-                    <input type="checkbox" name="horarios[{{ $dia }}][activo]" checked>
-                    Activo
-                  </label>
-                </div>
+              <div class="hour-day">
+                <div class="hour-label">{{ $dia }}</div>
+                <input type="time" name="horarios[{{ $dia }}][inicio]" value="08:00" class="hour-input">
+                <input type="time" name="horarios[{{ $dia }}][fin]" value="18:00" class="hour-input">
+                <label>
+                  <input type="checkbox" name="horarios[{{ $dia }}][activo]" checked>
+                  Activo
+                </label>
+              </div>
               @endforeach
             </div>
             <div class="form-actions" style="margin-top:20px;">
@@ -892,11 +907,11 @@
           </form>
         </div>
         @if ($errors->any())
-          <script>
-            document.addEventListener('DOMContentLoaded', function () {
-              showPanel('barber-register');
-            });
-          </script>
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+            showPanel('barber-register');
+          });
+        </script>
         @endif
       </div>
       <div class="panel" id="panel-agenda">
@@ -917,61 +932,61 @@
         </div>
         <div class="schedule-grid">
           @foreach(['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] as $i => $day)
-            <div class="day-col {{ $i == 2 ? 'today' : '' }}">
-              <div class="day-hd">
-                <div class="day-name">{{ $day }}</div>
-                <div class="day-num">{{ 14 + $i }}</div>
-              </div>
-              @if($i == 0)
-                <div class="slot slot--booked">
-                  <div class="slot-time">9:00</div>
-                  <div class="slot-name">Carlos R.</div>
-                </div>
-                <div class="slot slot--avail">
-                  <div class="slot-time">11:00</div>
-                  <div class="slot-name">Libre</div>
-              </div>@endif
-              @if($i == 1)
-                <div class="slot slot--booked">
-                  <div class="slot-time">10:00</div>
-                  <div class="slot-name">Miguel T.</div>
-              </div>@endif
-              @if($i == 2)
-                <div class="slot slot--booked">
-                  <div class="slot-time">9:00</div>
-                  <div class="slot-name">Juan L.</div>
-                </div>
-                <div class="slot slot--booked">
-                  <div class="slot-time">14:00</div>
-                  <div class="slot-name">Ana M.</div>
-                </div>
-                <div class="slot slot--avail">
-                  <div class="slot-time">16:00</div>
-                  <div class="slot-name">Libre</div>
-              </div>@endif
-              @if($i == 4)
-                <div class="slot slot--booked">
-                  <div class="slot-time">11:00</div>
-                  <div class="slot-name">Pedro G.</div>
-                </div>
-                <div class="slot slot--avail">
-                  <div class="slot-time">15:00</div>
-                  <div class="slot-name">Libre</div>
-              </div>@endif
-              @if($i == 5)
-                <div class="slot slot--booked">
-                  <div class="slot-time">9:00</div>
-                  <div class="slot-name">Luis M.</div>
-                </div>
-                <div class="slot slot--booked">
-                  <div class="slot-time">10:30</div>
-                  <div class="slot-name">Andrés C.</div>
-                </div>
-                <div class="slot slot--booked">
-                  <div class="slot-time">12:00</div>
-                  <div class="slot-name">Camilo R.</div>
-              </div>@endif
+          <div class="day-col {{ $i == 2 ? 'today' : '' }}">
+            <div class="day-hd">
+              <div class="day-name">{{ $day }}</div>
+              <div class="day-num">{{ 14 + $i }}</div>
             </div>
+            @if($i == 0)
+            <div class="slot slot--booked">
+              <div class="slot-time">9:00</div>
+              <div class="slot-name">Carlos R.</div>
+            </div>
+            <div class="slot slot--avail">
+              <div class="slot-time">11:00</div>
+              <div class="slot-name">Libre</div>
+            </div>@endif
+            @if($i == 1)
+            <div class="slot slot--booked">
+              <div class="slot-time">10:00</div>
+              <div class="slot-name">Miguel T.</div>
+            </div>@endif
+            @if($i == 2)
+            <div class="slot slot--booked">
+              <div class="slot-time">9:00</div>
+              <div class="slot-name">Juan L.</div>
+            </div>
+            <div class="slot slot--booked">
+              <div class="slot-time">14:00</div>
+              <div class="slot-name">Ana M.</div>
+            </div>
+            <div class="slot slot--avail">
+              <div class="slot-time">16:00</div>
+              <div class="slot-name">Libre</div>
+            </div>@endif
+            @if($i == 4)
+            <div class="slot slot--booked">
+              <div class="slot-time">11:00</div>
+              <div class="slot-name">Pedro G.</div>
+            </div>
+            <div class="slot slot--avail">
+              <div class="slot-time">15:00</div>
+              <div class="slot-name">Libre</div>
+            </div>@endif
+            @if($i == 5)
+            <div class="slot slot--booked">
+              <div class="slot-time">9:00</div>
+              <div class="slot-name">Luis M.</div>
+            </div>
+            <div class="slot slot--booked">
+              <div class="slot-time">10:30</div>
+              <div class="slot-name">Andrés C.</div>
+            </div>
+            <div class="slot slot--booked">
+              <div class="slot-time">12:00</div>
+              <div class="slot-name">Camilo R.</div>
+            </div>@endif
+          </div>
           @endforeach
         </div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;margin-bottom:14px;">Citas
@@ -979,28 +994,28 @@
           Día</div>
         <div class="appt-list">
           @forelse($todayAppointments ?? [] as $appt)
-            <div class="appt-item">
-              <div class="appt-time">{{ $appt->time }}</div>
-              <div class="appt-info">
-                <div class="appt-client">{{ $appt->client->name }}</div>
-                <div class="appt-service">{{ $appt->service }}</div>
-                <div class="appt-barber">Barbero: {{ $appt->barber->name }}</div>
-              </div>
-              <div class="appt-dur">{{ $appt->duration }} min<br><span class="badge badge--green">Confirmado</span>
-              </div>
+          <div class="appt-item">
+            <div class="appt-time">{{ $appt->time }}</div>
+            <div class="appt-info">
+              <div class="appt-client">{{ $appt->client->name }}</div>
+              <div class="appt-service">{{ $appt->service }}</div>
+              <div class="appt-barber">Barbero: {{ $appt->barber->name }}</div>
             </div>
+            <div class="appt-dur">{{ $appt->duration }} min<br><span class="badge badge--green">Confirmado</span>
+            </div>
+          </div>
           @empty
-            @foreach([['09:00', 'Carlos Ruiz', 'Corte + Barba', 'Pedro G.', '60'], ['10:00', 'Miguel Torres', 'Corte Clásico', 'Luis M.', '45'], ['11:30', 'Juan López', 'Diseño', 'Andrés C.', '75'], ['14:00', 'Ana Martínez', 'Coloración', 'Camilo R.', '90'], ['15:30', 'Pedro Sánchez', 'Fade', 'Pedro G.', '50']] as $a)
-              <div class="appt-item">
-                <div class="appt-time">{{ $a[0] }}</div>
-                <div class="appt-info">
-                  <div class="appt-client">{{ $a[1] }}</div>
-                  <div class="appt-service">{{ $a[2] }}</div>
-                  <div class="appt-barber">Barbero: {{ $a[3] }}</div>
-                </div>
-                <div class="appt-dur">{{ $a[4] }} min<br><span class="badge badge--green">Confirmado</span></div>
-              </div>
-            @endforeach
+          @foreach([['09:00', 'Carlos Ruiz', 'Corte + Barba', 'Pedro G.', '60'], ['10:00', 'Miguel Torres', 'Corte Clásico', 'Luis M.', '45'], ['11:30', 'Juan López', 'Diseño', 'Andrés C.', '75'], ['14:00', 'Ana Martínez', 'Coloración', 'Camilo R.', '90'], ['15:30', 'Pedro Sánchez', 'Fade', 'Pedro G.', '50']] as $a)
+          <div class="appt-item">
+            <div class="appt-time">{{ $a[0] }}</div>
+            <div class="appt-info">
+              <div class="appt-client">{{ $a[1] }}</div>
+              <div class="appt-service">{{ $a[2] }}</div>
+              <div class="appt-barber">Barbero: {{ $a[3] }}</div>
+            </div>
+            <div class="appt-dur">{{ $a[4] }} min<br><span class="badge badge--green">Confirmado</span></div>
+          </div>
+          @endforeach
           @endforelse
         </div>
       </div>
@@ -1020,7 +1035,7 @@
                 <select name="barber_id" style="width:100%;">
                   <option value="">Seleccionar barbero...</option>
                   @foreach($barbers ?? [] as $b)
-                    <option value="{{ $b->id }}">{{ $b->name }}</option>
+                  <option value="{{ $b->id }}">{{ $b->name }}</option>
                   @endforeach
                   <option>Pedro Gómez</option>
                   <option>Luis Mora</option>
@@ -1031,16 +1046,16 @@
             </div>
             <div class="hours-grid">
               @foreach(['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] as $day)
-                <div class="hour-day">
-                  <div class="hour-label">{{ $day }}</div>
-                  <input type="time" class="hour-input" name="hours[{{ $day }}][start]" value="08:00">
-                  <input type="time" class="hour-input" name="hours[{{ $day }}][end]" value="18:00">
-                  <label
-                    style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);justify-content:center;margin-top:4px;">
-                    <input type="checkbox" name="hours[{{ $day }}][active]" checked style="accent-color:var(--gold);">
-                    Activo
-                  </label>
-                </div>
+              <div class="hour-day">
+                <div class="hour-label">{{ $day }}</div>
+                <input type="time" class="hour-input" name="hours[{{ $day }}][start]" value="08:00">
+                <input type="time" class="hour-input" name="hours[{{ $day }}][end]" value="18:00">
+                <label
+                  style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);justify-content:center;margin-top:4px;">
+                  <input type="checkbox" name="hours[{{ $day }}][active]" checked style="accent-color:var(--gold);">
+                  Activo
+                </label>
+              </div>
               @endforeach
             </div>
             <div class="form-actions" style="margin-top:20px;">
@@ -1070,9 +1085,9 @@
 
         {{-- Feedback --}}
         @if(session('success'))
-          <div class="feedback feedback--ok" style="margin-bottom:16px;">
-            {{ session('success') }}
-          </div>
+        <div class="feedback feedback--ok" style="margin-bottom:16px;">
+          {{ session('success') }}
+        </div>
         @endif
 
         <div class="two-col">
@@ -1086,46 +1101,46 @@
 
               {{-- Indicador visual según DB --}}
               @if($config?->estado)
-                <div class="shop-status shop-status--open">
-                  <div class="status-dot status-dot--open"></div>
-                  <div>
-                    <div class="status-text status-text--open">BARBERÍA ABIERTA</div>
-                    <div style="font-size:11px;color:var(--muted);">
-                      Desde las {{ \Carbon\Carbon::parse($config?->hora_apertura)->format('g:i A') }}
-                    </div>
+              <div class="shop-status shop-status--open">
+                <div class="status-dot status-dot--open"></div>
+                <div>
+                  <div class="status-text status-text--open">BARBERÍA ABIERTA</div>
+                  <div style="font-size:11px;color:var(--muted);">
+                    Desde las {{ \Carbon\Carbon::parse($config?->hora_apertura)->format('g:i A') }}
                   </div>
                 </div>
+              </div>
               @else
-                <div class="shop-status shop-status--closed">
-                  <div class="status-dot status-dot--closed"></div>
-                  <div>
-                    <div class="status-text status-text--closed">BARBERÍA CERRADA</div>
-                    <div style="font-size:11px;color:var(--muted);">
-                      La agenda está bloqueada
-                    </div>
+              <div class="shop-status shop-status--closed">
+                <div class="status-dot status-dot--closed"></div>
+                <div>
+                  <div class="status-text status-text--closed">BARBERÍA CERRADA</div>
+                  <div style="font-size:11px;color:var(--muted);">
+                    La agenda está bloqueada
                   </div>
                 </div>
+              </div>
               @endif
 
               {{-- Botón único que alterna --}}
               <form action="{{ route('admin.barberia.toggle') }}" method="POST" style="margin-top:16px;">
                 @csrf @method('PATCH')
                 @if($config?->estado)
-                  <button type="submit" class="toggle-btn toggle-btn--close" style="width:100%;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="3" width="18" height="18" rx="2" />
-                      <line x1="9" y1="9" x2="15" y2="15" />
-                      <line x1="15" y1="9" x2="9" y2="15" />
-                    </svg>
-                    Cerrar Barbería
-                  </button>
+                <button type="submit" class="toggle-btn toggle-btn--close" style="width:100%;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                  </svg>
+                  Cerrar Barbería
+                </button>
                 @else
-                  <button type="submit" class="toggle-btn toggle-btn--open" style="width:100%;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                    </svg>
-                    Abrir Barbería
-                  </button>
+                <button type="submit" class="toggle-btn toggle-btn--open" style="width:100%;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  </svg>
+                  Abrir Barbería
+                </button>
                 @endif
               </form>
 
@@ -1224,11 +1239,128 @@
             </form>
           </div>
         </div>
+      </div>
+      <div class="panel" id="panel-service-register">
+        <div style="margin-bottom:20px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">
+            Registrar Servicio
+          </div>
+          <div style="font-size:13px;color:var(--muted2);">
+            Crea un nuevo servicio para la barbería
+          </div>
+        </div>
 
+        <div class="card" style="max-width:600px;">
+          <div class="card-body" style="padding:24px;">
+
+            <form action="{{ route('admin.services.store') }}" method="POST">
+              @csrf
+
+              <div class="form-grid" style="gap:16px;">
+
+                {{-- Nombre --}}
+                <div class="field-wrap">
+                  <label class="field-lbl">Nombre del Servicio</label>
+                  <div class="field-box">
+                    <input type="text" name="nombre" placeholder="Ej: Corte + Barba" required>
+                  </div>
+                </div>
+
+                {{-- Precio --}}
+                <div class="field-wrap">
+                  <label class="field-lbl">Precio</label>
+                  <div class="field-box">
+                    <input type="number" name="precio" placeholder="Ej: 25000" required>
+                  </div>
+                </div>
+
+                {{-- Duración --}}
+                <div class="field-wrap">
+                  <label class="field-lbl">Duración (minutos)</label>
+                  <div class="field-box">
+                    <input type="number" name="duracion" placeholder="Ej: 45" required>
+                  </div>
+                </div>
+
+                {{-- Descripción --}}
+                <div class="field-wrap form-full">
+                  <label class="field-lbl">Descripción</label>
+                  <textarea class="field-ta" name="descripcion" placeholder="Detalles del servicio..."></textarea>
+                </div>
+
+              </div>
+
+              <div class="form-actions" style="margin-top:20px;">
+                <button type="submit" class="btn-gold">
+                  Guardar Servicio
+                </button>
+
+                <button type="button" class="btn-outline"
+                  onclick="showPanel('welcome')">
+                  Cancelar
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      </div>
+      <div class="panel" id="panel-services-list">
+
+        <div style="margin-bottom:20px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">
+            Servicios de la Barbería
+          </div>
+          <div style="font-size:13px;color:var(--muted2);">
+            Lista de servicios disponibles
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body" style="padding:24px;">
+            @forelse($servicios ?? [] as $servicio)
+            <div class="list-item" style="align-items:flex-start; gap:14px;">
+              <div class="li-avatar">
+                {{ substr($servicio->nombre, 0, 1) }}
+              </div>
+              <div class="li-info" style="flex:1;">
+                <div class="li-name">
+                  {{ $servicio->nombre }}
+                </div>
+                <div class="li-sub">
+                  {{ $servicio->descripcion }}
+                </div>
+                <div style="margin-top:6px; font-size:12px; color:var(--muted2); display:flex; gap:10px;">
+                  <span>{{ $servicio->duracion }} min</span>
+                  <span>${{ number_format($servicio->precio, 0, ',', '.') }}</span>
+                </div>
+              </div>
+              {{-- acciones --}}
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <button class="btn-outline" style="padding:6px 10px;font-size:12px;">
+                  Editar
+                </button>
+                <form action="{{ route('admin.services.destroy', $servicio->id_servicio) }}" method="POST">
+                  @csrf
+                  @method('DELETE')
+                  <button class="btn-outline" style="padding:6px 10px;font-size:12px;color:#ff5c5c;">
+                    Eliminar
+                  </button>
+                </form>
+              </div>
+            </div>
+            <hr style="opacity:.1;margin:12px 0;">
+            @empty
+            <div style="text-align:center;color:var(--muted2);padding:20px;">
+              No hay servicios registrados aún
+            </div>
+            @endforelse
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-  <script src="/BladeBarber/public/js/admin-dash.js"></script>
+    <script src="/BladeBarber/public/js/admin-dash.js"></script>
 </body>
 
 </html>

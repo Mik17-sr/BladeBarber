@@ -137,23 +137,26 @@
         <div class="sidebar-foot">
             <div class="avatar-sm">
                 @if(auth()->user()->foto)
-                    <img src="{{ asset('storage/' . auth()->user()->foto) }}"
-                        style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                <img src="{{ asset('storage/' . auth()->user()->foto) }}"
+                    style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                 @else
-                    {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+                {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
                 @endif
             </div>
             <div class="foot-info">
-                <div class="foot-name">Juan Pérez</div>
+                <div class="foot-name">{{ auth()->user()->nombre ?? 'Cliente' }}</div>
                 <div class="foot-role">Cliente</div>
             </div>
-            <button class="logout-btn" title="Cerrar sesión" onclick="alert('Cerrando sesión...')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-            </button>
+            <form action="{{ route('logout') }}" method="POST" style="display:inline;">
+                @csrf
+                <button class="logout-btn" type="submit" title="Cerrar sesión">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                </button>
+            </form>
         </div>
     </aside>
 
@@ -361,10 +364,10 @@
                 <div class="profile-hero">
                     <div class="avatar-lg" onclick="showPanel('profile-edit')">
                         @if(auth()->user()->foto)
-                            <img src="{{ asset('storage/' . auth()->user()->foto) }}"
-                                style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        <img src="{{ asset('storage/' . auth()->user()->foto) }}"
+                            style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                         @else
-                            {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+                        {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
                         @endif
                         <div class="avatar-overlay">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -450,10 +453,10 @@
                 <div class="profile-hero" style="margin-bottom:20px;">
                     <div class="avatar-lg" style="cursor:pointer;">
                         @if(auth()->user()->foto)
-                            <img src="{{ asset('storage/' . auth()->user()->foto) }}"
-                                style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        <img src="{{ asset('storage/' . auth()->user()->foto) }}"
+                            style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                         @else
-                            {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+                        {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
                         @endif
                         <div class="avatar-overlay">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -615,47 +618,56 @@
                 <!-- Step 1: Servicio -->
                 <div class="step-content active" id="step1">
                     <div class="card">
-                        <div class="card-hd"><span class="card-hd-title">Elige tu servicio</span></div>
+                        <div class="card-hd">
+                            <span class="card-hd-title">Elige tu servicio</span>
+                            <span style="font-size:12px;color:var(--muted2);">Puedes elegir más de uno</span>
+                        </div>
                         <div class="card-body">
-                            <div class="service-grid">
+                            <div class="service-grid" id="serviceGrid">
+                                @forelse ($servicios as $servicio)
                                 <div class="service-card"
-                                    onclick="selectService(this,'Corte Clásico','$25.000','45 min')">
-                                    <div class="service-name">✂ Corte Clásico</div>
-                                    <div class="service-price">$25.000</div>
-                                    <div class="service-dur">45 min · El favorito</div>
+                                    onclick="toggleService(this,
+                        {{ $servicio->id_servicio }},
+                        '{{ $servicio->nombre }}',
+                        {{ $servicio->precio }},
+                        {{ $servicio->duracion }})"
+                                    data-id="{{ $servicio->id_servicio }}">
+
+                                    <div class="service-check">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                    </div>
+
+                                    <div class="service-name">✂ {{ $servicio->nombre }}</div>
+                                    <div class="service-price">${{ number_format($servicio->precio, 0, ',', '.') }}</div>
+                                    <div class="service-dur">{{ $servicio->duracion }} min · Servicio disponible</div>
                                 </div>
-                                <div class="service-card"
-                                    onclick="selectService(this,'Corte + Barba','$40.000','60 min')">
-                                    <div class="service-name">✂ Corte + Barba</div>
-                                    <div class="service-price">$40.000</div>
-                                    <div class="service-dur">60 min · Más completo</div>
+                                @empty
+                                <div style="text-align:center;color:var(--muted2);grid-column:1/-1;">
+                                    No hay servicios disponibles
                                 </div>
-                                <div class="service-card"
-                                    onclick="selectService(this,'Fade Premium','$35.000','50 min')">
-                                    <div class="service-name">✂ Fade Premium</div>
-                                    <div class="service-price">$35.000</div>
-                                    <div class="service-dur">50 min · Degradado perfecto</div>
-                                </div>
-                                <div class="service-card"
-                                    onclick="selectService(this,'Arreglo de Barba','$20.000','30 min')">
-                                    <div class="service-name">✂ Arreglo de Barba</div>
-                                    <div class="service-price">$20.000</div>
-                                    <div class="service-dur">30 min · Solo barba</div>
-                                </div>
-                                <div class="service-card"
-                                    onclick="selectService(this,'Diseño & Arte','$45.000','75 min')">
-                                    <div class="service-name">✂ Diseño & Arte</div>
-                                    <div class="service-price">$45.000</div>
-                                    <div class="service-dur">75 min · Corte artístico</div>
-                                </div>
-                                <div class="service-card" onclick="selectService(this,'Niños','$18.000','30 min')">
-                                    <div class="service-name">✂ Corte Niños</div>
-                                    <div class="service-price">$18.000</div>
-                                    <div class="service-dur">30 min · Hasta 12 años</div>
+                                @endforelse
+                            </div>
+
+                            <!-- Barra resumen de selección -->
+                            <div class="service-summary" id="serviceSummary" style="display:none;">
+                                <div class="service-summary-chips" id="summaryChips"></div>
+                                <div class="service-summary-totals">
+                                    <div class="service-summary-total">
+                                        <span class="summary-lbl">Duración</span>
+                                        <span class="summary-val" id="sumTotalDur">0 min</span>
+                                    </div>
+                                    <div class="service-summary-total">
+                                        <span class="summary-lbl">Total</span>
+                                        <span class="summary-val summary-val--accent" id="sumTotalPrice">$0</span>
+                                    </div>
                                 </div>
                             </div>
+
                             <div style="margin-top:20px;text-align:right;">
-                                <button class="btn-violet" onclick="goStep(2)">
+                                <button class="btn-violet" id="btnStep2" onclick="goStep(2)" disabled
+                                    style="opacity:.4;cursor:not-allowed;">
                                     Siguiente — Elegir Barbero
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <polyline points="9 18 15 12 9 6" />
@@ -669,34 +681,41 @@
                 <!-- Step 2: Barbero -->
                 <div class="step-content" id="step2">
                     <div class="card">
-                        <div class="card-hd"><span class="card-hd-title">Elige tu barbero</span></div>
+                        <div class="card-hd">
+                            <span class="card-hd-title">Elige tu barbero</span>
+                        </div>
+
                         <div class="card-body">
+
                             <div class="barber-pick-grid">
-                                <div class="barber-pick" onclick="selectBarber(this,'Pedro Gómez')">
-                                    <div class="bp-avatar">P</div>
-                                    <div class="bp-name">Pedro Gómez</div>
-                                    <div class="bp-spec">Fade & Diseño</div>
+
+                                @forelse ($barberos as $barbero)
+                                <div class="barber-pick"
+                                    onclick="selectBarber(this, '{{ $barbero->usuario->nombre }}', {{ $barbero->id_barbero }})"
+                                    data-id="{{ $barbero->id_barbero }}">
+
+                                    {{-- Avatar --}}
+                                    <div class="bp-avatar" style="overflow:hidden; display:flex; align-items:center; justify-content:center;">
+
+                                        @if ($barbero->usuario->foto)
+                                        <img src="{{ asset('storage/' . $barbero->usuario->foto) }}"
+                                            style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                                        @else
+                                        {{ strtoupper(substr($barbero->usuario->nombre, 0, 1)) }}
+                                        @endif
+
+                                    </div>
+
+                                    {{-- Nombre --}}
+                                    <div class="bp-name">
+                                        {{ $barbero->usuario->nombre }}
+                                    </div>
                                 </div>
-                                <div class="barber-pick" onclick="selectBarber(this,'Luis Mora')">
-                                    <div class="bp-avatar">L</div>
-                                    <div class="bp-name">Luis Mora</div>
-                                    <div class="bp-spec">Corte Clásico</div>
+                                @empty
+                                <div style="text-align:center;color:var(--muted2);grid-column:1/-1;">
+                                    No hay barberos disponibles
                                 </div>
-                                <div class="barber-pick" onclick="selectBarber(this,'Andrés Cruz')">
-                                    <div class="bp-avatar">A</div>
-                                    <div class="bp-name">Andrés Cruz</div>
-                                    <div class="bp-spec">Barba & Estilo</div>
-                                </div>
-                                <div class="barber-pick" onclick="selectBarber(this,'Camilo R.')">
-                                    <div class="bp-avatar">C</div>
-                                    <div class="bp-name">Camilo R.</div>
-                                    <div class="bp-spec">Coloración</div>
-                                </div>
-                                <div class="barber-pick" onclick="selectBarber(this,'Cualquiera')">
-                                    <div class="bp-avatar" style="font-size:14px;">🎲</div>
-                                    <div class="bp-name">Sin preferencia</div>
-                                    <div class="bp-spec">Más disponibilidad</div>
-                                </div>
+                                @endforelse
                             </div>
                             <div style="margin-top:20px;display:flex;gap:10px;justify-content:space-between;">
                                 <button class="btn-outline" onclick="goStep(1)">
@@ -705,6 +724,7 @@
                                     </svg>
                                     Atrás
                                 </button>
+
                                 <button class="btn-violet" onclick="goStep(3)">
                                     Siguiente — Fecha & Hora
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -786,7 +806,6 @@
                     </div>
                 </div>
 
-                <!-- Step 4: Confirmar -->
                 <div class="step-content" id="step4">
                     <div class="card">
                         <div class="card-hd"><span class="card-hd-title">Resumen de tu cita</span></div>
@@ -817,8 +836,17 @@
                                     <span class="summary-val highlight" id="sumPrice">—</span>
                                 </div>
                             </div>
-                            <div
-                                style="margin-top:20px;display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;">
+
+                            {{-- Formulario oculto que se envía al confirmar --}}
+                            <form method="POST" action="{{ route('citas.store') }}" id="formCita">
+                                @csrf
+                                <input type="hidden" name="id_barbero" id="inputBarbero">
+                                <input type="hidden" name="fecha_cita" id="inputFecha">
+                                <input type="hidden" name="hora_cita" id="inputHora">
+                                <div id="inputsServicios"></div>
+                            </form>
+
+                            <div style="margin-top:20px;display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;">
                                 <button class="btn-outline" onclick="goStep(3)">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <polyline points="15 18 9 12 15 6" />
@@ -1123,107 +1151,107 @@
 
                 <div class="posts-list">
                     @forelse($publicaciones as $pub)
-                        @php
-                            $usuario = $pub->muro->usuario;
-                            $rol = $usuario->rol ?? 'cliente';
-                            $inicial = strtoupper(substr($usuario->nombre, 0, 1));
-                            $esMio = $usuario->id_usuario === auth()->id();
+                    @php
+                    $usuario = $pub->muro->usuario;
+                    $rol = $usuario->rol ?? 'cliente';
+                    $inicial = strtoupper(substr($usuario->nombre, 0, 1));
+                    $esMio = $usuario->id_usuario === auth()->id();
 
-                            $badgeClass = match (strtolower($rol)) {
-                                'admin' => 'badge--violet',
-                                'barbero' => 'badge--green',
-                                default => 'badge--amber',
-                            };
-                            $badgeLabel = match (strtolower($rol)) {
-                                'admin' => 'Admin',
-                                'barbero' => 'Barbero',
-                                default => 'Cliente',
-                            };
-                        @endphp
+                    $badgeClass = match (strtolower($rol)) {
+                    'admin' => 'badge--violet',
+                    'barbero' => 'badge--green',
+                    default => 'badge--amber',
+                    };
+                    $badgeLabel = match (strtolower($rol)) {
+                    'admin' => 'Admin',
+                    'barbero' => 'Barbero',
+                    default => 'Cliente',
+                    };
+                    @endphp
 
-                        <div class="post-card">
-                            <div class="post-head">
-                                @if($usuario->foto)
-                                    <div class="li-avatar" style="padding:0;overflow:hidden;">
-                                        <img src="{{ asset('storage/' . $usuario->foto) }}"
-                                            style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-                                    </div>
-                                @else
-                                    <div class="li-avatar">{{ $inicial }}</div>
-                                @endif
-
-                                <div class="post-meta">
-                                    <div class="post-author">
-                                        {{ $usuario->nombre }}
-                                        @if($esMio) <span style="color:var(--muted2);font-size:11px;">· (Tú)</span> @endif
-                                    </div>
-                                    <div class="post-time">{{ $pub->fecha->diffForHumans() }}</div>
-                                </div>
-
-                                <span class="badge {{ $badgeClass }}">{{ $badgeLabel }}</span>
-
-                                @if($esMio)
-                                    <form method="POST" action="{{ route('publicacion.destroy', $pub->id_publicacion) }}"
-                                        style="margin-left:auto;">
-                                        @csrf @method('DELETE')
-                                        <button type="submit"
-                                            style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;"
-                                            title="Eliminar">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                style="width:15px;height:15px;">
-                                                <polyline points="3 6 5 6 21 6" />
-                                                <path d="M19 6l-1 14H6L5 6" />
-                                                <path d="M10 11v6M14 11v6" />
-                                                <path d="M9 6V4h6v2" />
-                                            </svg>
-                                        </button>
-                                    </form>
-                                @endif
+                    <div class="post-card">
+                        <div class="post-head">
+                            @if($usuario->foto)
+                            <div class="li-avatar" style="padding:0;overflow:hidden;">
+                                <img src="{{ asset('storage/' . $usuario->foto) }}"
+                                    style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                             </div>
-
-                            @if($pub->imagenes->count())
-                                <img src="{{ asset('storage/' . $pub->imagenes->first()->imagen) }}"
-                                    style="width:100%;max-height:300px;object-fit:cover;">
+                            @else
+                            <div class="li-avatar">{{ $inicial }}</div>
                             @endif
 
-                            <div class="post-body">
-                                <p class="post-text">{{ $pub->contenido }}</p>
-                            </div>
-
-                            <div class="post-footer">
-                                <button class="post-action" onclick="likePost(this)">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path
-                                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                                    </svg>
-                                    <span>0</span>
-                                </button>
-                                <button class="post-action" onclick="toggleComment(this,'c{{ $pub->id_publicacion }}')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                                    </svg>
-                                    <span>0</span>
-                                </button>
-                            </div>
-
-                            <div class="comment-box" id="c{{ $pub->id_publicacion }}"
-                                style="display:none;padding:12px 16px;border-top:1px solid var(--border2);">
-                                <div style="display:flex;gap:8px;">
-                                    <div class="li-avatar" style="flex-shrink:0;">
-                                        {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
-                                    </div>
-                                    <div class="field-box" style="flex:1;height:38px;">
-                                        <input type="text" placeholder="Escribe un comentario..." style="font-size:13px;">
-                                    </div>
-                                    <button class="btn-violet" style="height:38px;padding:0 14px;font-size:12px;"
-                                        onclick="addComment(this)">Enviar</button>
+                            <div class="post-meta">
+                                <div class="post-author">
+                                    {{ $usuario->nombre }}
+                                    @if($esMio) <span style="color:var(--muted2);font-size:11px;">· (Tú)</span> @endif
                                 </div>
+                                <div class="post-time">{{ $pub->fecha->diffForHumans() }}</div>
+                            </div>
+
+                            <span class="badge {{ $badgeClass }}">{{ $badgeLabel }}</span>
+
+                            @if($esMio)
+                            <form method="POST" action="{{ route('publicacion.destroy', $pub->id_publicacion) }}"
+                                style="margin-left:auto;">
+                                @csrf @method('DELETE')
+                                <button type="submit"
+                                    style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;"
+                                    title="Eliminar">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        style="width:15px;height:15px;">
+                                        <polyline points="3 6 5 6 21 6" />
+                                        <path d="M19 6l-1 14H6L5 6" />
+                                        <path d="M10 11v6M14 11v6" />
+                                        <path d="M9 6V4h6v2" />
+                                    </svg>
+                                </button>
+                            </form>
+                            @endif
+                        </div>
+
+                        @if($pub->imagenes->count())
+                        <img src="{{ asset('storage/' . $pub->imagenes->first()->imagen) }}"
+                            style="width:100%;max-height:300px;object-fit:cover;">
+                        @endif
+
+                        <div class="post-body">
+                            <p class="post-text">{{ $pub->contenido }}</p>
+                        </div>
+
+                        <div class="post-footer">
+                            <button class="post-action" onclick="likePost(this)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                </svg>
+                                <span>0</span>
+                            </button>
+                            <button class="post-action" onclick="toggleComment(this,'c{{ $pub->id_publicacion }}')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                </svg>
+                                <span>0</span>
+                            </button>
+                        </div>
+
+                        <div class="comment-box" id="c{{ $pub->id_publicacion }}"
+                            style="display:none;padding:12px 16px;border-top:1px solid var(--border2);">
+                            <div style="display:flex;gap:8px;">
+                                <div class="li-avatar" style="flex-shrink:0;">
+                                    {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+                                </div>
+                                <div class="field-box" style="flex:1;height:38px;">
+                                    <input type="text" placeholder="Escribe un comentario..." style="font-size:13px;">
+                                </div>
+                                <button class="btn-violet" style="height:38px;padding:0 14px;font-size:12px;"
+                                    onclick="addComment(this)">Enviar</button>
                             </div>
                         </div>
+                    </div>
                     @empty
-                        <div style="text-align:center;padding:40px;color:var(--muted2);">
-                            No hay publicaciones aún. ¡Sé el primero en publicar!
-                        </div>
+                    <div style="text-align:center;padding:40px;color:var(--muted2);">
+                        No hay publicaciones aún. ¡Sé el primero en publicar!
+                    </div>
                     @endforelse
                 </div>
             </div>
@@ -1276,6 +1304,10 @@
 
         </div>
     </div>
+    <script>
+        const APP_URL = '{{ url("") }}';
+    </script>
+    <script src="/BladeBarber/public/js/cliente-dash.js"></script>
     <script src="/BladeBarber/public/js/cliente-dash.js"></script>
 </body>
 

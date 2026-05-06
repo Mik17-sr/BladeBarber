@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Muro;
 use App\Models\Imagen;
+use App\Models\Servicio;
 
 class AdminController extends Controller
 {
@@ -137,7 +138,8 @@ class AdminController extends Controller
                 ->get();
         $config   = Configuracion::first();
         $barberos = Barbero::with('usuario')->get();
-        return view('dashboard_admin', compact('posts', 'config', 'barberos'));
+        $servicios = Servicio::all();
+        return view('dashboard_admin', compact('posts', 'config', 'barberos', 'servicios'));
         
     }
 
@@ -220,5 +222,30 @@ class AdminController extends Controller
         $publicacion->delete();
 
         return redirect()->back()->with('success', 'Publicación eliminada.');
+    }
+
+    public function storeService(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:100',
+            'precio' => 'required|numeric|min:0',
+            'duracion' => 'required|integer|min:1',
+        ]);
+
+        Servicio::create([
+            'nombre' => $request->nombre,
+            'descripcion' => $request->descripcion,
+            'precio' => $request->precio,
+            'duracion' => $request->duracion,
+        ]);
+
+        return back()->with('success', 'Servicio creado correctamente.');
+    }
+
+    public function destroyService($id)
+    {
+        Servicio::where('id_servicio', $id)->delete();
+
+        return back()->with('success', 'Servicio eliminado correctamente.');
     }
 }

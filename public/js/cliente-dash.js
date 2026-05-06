@@ -47,7 +47,9 @@ function checkStrength(v) {
     if (/[A-Z]/.test(v)) s++;
     if (/[0-9]/.test(v)) s++;
     if (/[^A-Za-z0-9]/.test(v)) s++;
-    const w = ['', '25%', '50%', '75%', '100%'], c = ['', '#F87171', '#FBBF24', '#8B5CF6', '#34D399'], l = ['', 'Muy débil', 'Regular', 'Buena', 'Fuerte'];
+    const w = ['', '25%', '50%', '75%', '100%'];
+    const c = ['', '#F87171', '#FBBF24', '#8B5CF6', '#34D399'];
+    const l = ['', 'Muy débil', 'Regular', 'Buena', 'Fuerte'];
     bar.style.width = w[s]; bar.style.background = c[s];
     txt.textContent = l[s]; txt.style.color = c[s];
 }
@@ -59,100 +61,321 @@ function checkMatch() {
     m.style.color = p2 === p3 ? 'var(--green)' : 'var(--red)';
 }
 
-// ── AGENDA STEPS
-let currentStep = 1;
-let selected = { service: '', price: '', duration: '', barber: '', date: '', time: '' };
+// ── AGENDA — ESTADO GLOBAL
+let currentStep       = 1;
+let selectedServices  = {};
+let selectedBarberoId = null;
+let selectedDate      = null;
+let selectedTimeEl    = null;
+let calYear, calMonth;
 
+let sumService = '—';
+let sumBarber  = '—';
+let sumDate    = '—';
+let sumTime    = '—';
+let sumPrice   = '—';
+let sumDur     = '—';
+
+let barberoDisponibilidad = {
+    diasTrabajo:   [],
+    citasOcupadas: []
+};
+
+// ── STEPS
 function goStep(n) {
     document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
     document.getElementById('step' + n).classList.add('active');
     for (let i = 1; i <= 4; i++) {
-        const sc = document.getElementById('sc' + i), sl = document.getElementById('sl' + i);
+        const sc = document.getElementById('sc' + i);
+        const sl = document.getElementById('sl' + i);
         sc.className = 'step-circle' + (i < n ? ' done' : i === n ? ' active' : '');
         sl.className = 'step-label' + (i === n ? ' active' : '');
-        if (i < n) sc.innerHTML = '✓';
-        else sc.innerHTML = i;
+        sc.innerHTML = i < n ? '✓' : i;
     }
     currentStep = n;
     if (n === 4) updateSummary();
 }
 
-function selectService(el, name, price, dur) {
-    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    selected.service = name; selected.price = price; selected.duration = dur;
-}
-function selectBarber(el, name) {
-    document.querySelectorAll('.barber-pick').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    selected.barber = name;
-}
-function selectTime(el, time) {
-    document.querySelectorAll('.time-slot:not(.unavail)').forEach(t => t.classList.remove('selected'));
-    el.classList.add('selected');
-    selected.time = time;
-}
-
 function updateSummary() {
-    document.getElementById('sumService').textContent = selected.service || '—';
-    document.getElementById('sumBarber').textContent = selected.barber || '—';
-    document.getElementById('sumDate').textContent = selected.date || '—';
-    document.getElementById('sumTime').textContent = selected.time || '—';
-    document.getElementById('sumDur').textContent = selected.duration || '—';
-    document.getElementById('sumPrice').textContent = selected.price || '—';
+    document.getElementById('sumService').textContent = sumService || '—';
+    document.getElementById('sumBarber').textContent  = sumBarber  || '—';
+    document.getElementById('sumDate').textContent    = sumDate    || '—';
+    document.getElementById('sumTime').textContent    = sumTime    || '—';
+    document.getElementById('sumDur').textContent     = sumDur     || '—';
+    document.getElementById('sumPrice').textContent   = sumPrice   || '—';
 }
 
-function confirmarCita() {
-    const msg = `¡Cita confirmada!\n\n${selected.service}\nBarbero: ${selected.barber}\nFecha: ${selected.date} a las ${selected.time}`;
-    alert(msg);
-    showPanel('mis-citas');
-    goStep(1);
-    document.querySelectorAll('.service-card,.barber-pick,.time-slot').forEach(el => el.classList.remove('selected'));
-    selected = { service: '', price: '', duration: '', barber: '', date: '', time: '' };
+// ── SERVICIOS (multi-select)
+function toggleService(card, id, nombre, precio, duracion) {
+    if (selectedServices[id]) {
+        delete selectedServices[id];
+        card.classList.remove('selected');
+    } else {
+        selectedServices[id] = { id, nombre, precio, duracion };
+        card.classList.add('selected');
+    }
+    updateServiceSummary();
 }
 
-// ── CALENDAR
-let calDate = new Date();
-const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+function updateServiceSummary() {
+    const items   = Object.values(selectedServices);
+    const summary = document.getElementById('serviceSummary');
+    const chips   = document.getElementById('summaryChips');
+    const btn     = document.getElementById('btnStep2');
 
-function renderCalendar() {
+    if (items.length === 0) {
+        summary.style.display = 'none';
+        btn.disabled       = true;
+        btn.style.opacity  = '.4';
+        btn.style.cursor   = 'not-allowed';
+    } else {
+        summary.style.display = 'flex';
+        btn.disabled       = false;
+        btn.style.opacity  = '1';
+        btn.style.cursor   = 'pointer';
+
+        chips.innerHTML = items.map(s => `
+            <span class="summary-chip">${s.nombre}
+                <button onclick="removeService(${s.id})" title="Quitar">×</button>
+            </span>`).join('');
+
+        const totalDur    = items.reduce((a, s) => a + s.duracion, 0);
+        const totalPrecio = items.reduce((a, s) => a + s.precio, 0);
+
+        document.getElementById('sumTotalDur').textContent   = totalDur + ' min';
+        document.getElementById('sumTotalPrice').textContent = '$' + totalPrecio.toLocaleString('es-CO');
+
+        // Variables globales para el resumen paso 4
+        sumService = items.map(s => s.nombre).join(' + ');
+        sumPrice   = '$' + totalPrecio.toLocaleString('es-CO');
+        sumDur     = totalDur + ' min';
+    }
+}
+
+function removeService(id) {
+    delete selectedServices[id];
+    const card = document.querySelector(`.service-card[data-id="${id}"]`);
+    if (card) card.classList.remove('selected');
+    updateServiceSummary();
+}
+
+// ── BARBERO
+function selectBarber(el, nombre, idBarbero) {
+    document.querySelectorAll('.barber-pick').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    sumBarber         = nombre;
+    selectedBarberoId = idBarbero;
+
+    if (!calYear || !calMonth === undefined) {
+        const hoy = new Date();
+        calYear  = hoy.getFullYear();
+        calMonth = hoy.getMonth();
+    }
+
+    selectedDate   = null;
+    selectedTimeEl = null;
+    document.getElementById('sumDate').textContent = '—';
+    document.getElementById('sumTime').textContent = '—';
+    document.getElementById('timeSlots').innerHTML =
+        '<div style="color:var(--muted2);font-size:13px;grid-column:1/-1;">Selecciona primero un día</div>';
+
+    const url = `${APP_URL}/barbero/${idBarbero}/disponibilidad`;
+
+    fetch(url)
+        .then(r => {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .then(data => {
+            console.log('Horarios recibidos:', data.horarios); 
+            barberoDisponibilidad.diasTrabajo   = data.horarios;
+            barberoDisponibilidad.citasOcupadas = data.citas;
+            renderCal();
+        })
+        .catch(err => console.error('Error:', err));
+}
+
+// ── CALENDARIO
+function initCal() {
+    const hoy = new Date();
+    calYear  = hoy.getFullYear();
+    calMonth = hoy.getMonth();
+    renderCal();
+}
+
+function renderCal() {
+    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    document.getElementById('calMonthLabel').textContent = `${meses[calMonth]} ${calYear}`;
+
     const grid = document.getElementById('calGrid');
     grid.innerHTML = '';
-    document.getElementById('calMonthLabel').textContent = months[calDate.getMonth()] + ' ' + calDate.getFullYear();
-    days.forEach(d => {
-        const el = document.createElement('div');
-        el.className = 'cal-day-name'; el.textContent = d; grid.appendChild(el);
+
+    // Cabecera semana (Lunes primero)
+    ['Lu','Ma','Mi','Ju','Vi','Sa','Do'].forEach(d => {
+        const h = document.createElement('div');
+        h.className = 'cal-header';
+        h.textContent = d;
+        grid.appendChild(h);
     });
-    const first = new Date(calDate.getFullYear(), calDate.getMonth(), 1).getDay();
-    const total = new Date(calDate.getFullYear(), calDate.getMonth() + 1, 0).getDate();
-    const today = new Date();
-    for (let i = 0; i < first; i++) {
-        const el = document.createElement('div'); el.className = 'cal-day empty'; grid.appendChild(el);
+
+    const primerDia = new Date(calYear, calMonth, 1);
+    const totalDias = new Date(calYear, calMonth + 1, 0).getDate();
+    const hoy       = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    // Offset: lunes=0 … domingo=6
+    let offset = primerDia.getDay() - 1;
+    if (offset < 0) offset = 6;
+
+    for (let i = 0; i < offset; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'cal-day cal-empty';
+        grid.appendChild(empty);
     }
-    for (let d = 1; d <= total; d++) {
-        const el = document.createElement('div');
-        const thisDate = new Date(calDate.getFullYear(), calDate.getMonth(), d);
-        const isPast = thisDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const isSun = thisDate.getDay() === 0;
-        el.className = 'cal-day' + (isPast || isSun ? ' disabled' : ' has-slot');
-        el.textContent = d;
-        if (!isPast && !isSun) {
-            if (d === today.getDate() && calDate.getMonth() === today.getMonth() && calDate.getFullYear() === today.getFullYear())
-                el.classList.add('today');
-            el.onclick = () => selectDay(el, d);
+
+    for (let d = 1; d <= totalDias; d++) {
+        const fecha = new Date(calYear, calMonth, d);
+        fecha.setHours(0, 0, 0, 0);
+
+        // JS: 0=dom…6=sab  →  BD: 1=lun…7=dom
+        const jsDow  = fecha.getDay();
+        const diaBD  = jsDow === 0 ? 7 : jsDow;
+
+        // ¿Trabaja el barbero ese día?
+        const horarioDia = barberoDisponibilidad.diasTrabajo
+            .find(h => h.dia === diaBD);
+
+        const pasado    = fecha < hoy;
+        const noTrabaja = !horarioDia;
+
+        const fechaStr = `${calYear}-${String(calMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+        const cell = document.createElement('div');
+        cell.textContent = d;
+
+        if (pasado || noTrabaja) {
+            cell.className = 'cal-day cal-disabled';
+            cell.title = noTrabaja ? 'El barbero no trabaja este día' : 'Fecha pasada';
+        } else {
+            cell.className = 'cal-day';
+            if (selectedDate === fechaStr) cell.classList.add('selected');
+            cell.onclick = () => selectDay(cell, fechaStr, horarioDia);
         }
-        grid.appendChild(el);
+
+        // Marcar hoy
+        const esHoy = fecha.getTime() === hoy.getTime();
+        if (esHoy && !pasado && !noTrabaja) cell.classList.add('today');
+
+        grid.appendChild(cell);
     }
 }
 
-function selectDay(el, d) {
+function prevMonth() {
+    calMonth--;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCal();
+}
+
+function nextMonth() {
+    calMonth++;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCal();
+}
+
+// ── DÍA Y SLOTS
+function selectDay(el, fechaStr, horarioDia) {
     document.querySelectorAll('.cal-day.selected').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
-    selected.date = d + ' de ' + months[calDate.getMonth()];
+    selectedDate   = fechaStr;
+    selectedTimeEl = null;
+
+    const [y, m, d] = fechaStr.split('-');
+    const meses = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    sumDate = `${d} ${meses[parseInt(m)]} ${y}`;
+    document.getElementById('sumDate').textContent = sumDate;
+    document.getElementById('sumTime').textContent = '—';
+
+    renderTimeSlots(fechaStr, horarioDia);
 }
-function prevMonth() { calDate.setMonth(calDate.getMonth() - 1); renderCalendar(); }
-function nextMonth() { calDate.setMonth(calDate.getMonth() + 1); renderCalendar(); }
+
+function renderTimeSlots(fechaStr, horarioDia) {
+    const container = document.getElementById('timeSlots');
+    container.innerHTML = '';
+
+    const ocupadas = barberoDisponibilidad.citasOcupadas
+        .filter(c => c.fecha === fechaStr)
+        .map(c => c.hora);
+
+    const [hIni] = horarioDia.hora_inicio.split(':').map(Number);
+    const [hFin] = horarioDia.hora_fin.split(':').map(Number);
+    const mIni   = parseInt(horarioDia.hora_inicio.split(':')[1]);
+    const mFin   = parseInt(horarioDia.hora_fin.split(':')[1]);
+
+    const minInicio = hIni * 60 + mIni;
+    const minFin    = hFin * 60 + mFin;
+
+    for (let min = minInicio; min < minFin; min += 30) {
+        const hh   = String(Math.floor(min / 60)).padStart(2, '0');
+        const mm   = String(min % 60).padStart(2, '0');
+        const slot = `${hh}:${mm}`;
+
+        const el = document.createElement('div');
+        el.textContent = slot;
+
+        if (ocupadas.includes(slot)) {
+            el.className = 'time-slot unavail';
+            el.title = 'Hora ocupada';
+        } else {
+            el.className = 'time-slot';
+            el.onclick = () => selectTime(el, slot);
+        }
+
+        container.appendChild(el);
+    }
+
+    if (container.children.length === 0) {
+        container.innerHTML =
+            '<div style="color:var(--muted2);font-size:13px;grid-column:1/-1;">Sin horarios disponibles</div>';
+    }
+}
+
+function selectTime(el, hora) {
+    if (selectedTimeEl) selectedTimeEl.classList.remove('selected');
+    el.classList.add('selected');
+    selectedTimeEl = el;
+    sumTime = hora;
+    document.getElementById('sumTime').textContent = hora;
+}
+
+// ── CONFIRMAR CITA
+function confirmarCita() {
+    const serviciosIds = Object.values(selectedServices).map(s => s.id);
+
+    if (!serviciosIds.length)  return alert('Selecciona al menos un servicio.');
+    if (!selectedBarberoId)    return alert('Selecciona un barbero.');
+    if (!selectedDate)         return alert('Selecciona una fecha.');
+    if (!sumTime || sumTime === '—') return alert('Selecciona una hora.');
+
+    // Llenar los campos ocultos del formulario
+    document.getElementById('inputBarbero').value = selectedBarberoId;
+    document.getElementById('inputFecha').value   = selectedDate;
+    document.getElementById('inputHora').value    = sumTime;
+
+    // Generar inputs hidden para cada servicio seleccionado
+    const contenedor = document.getElementById('inputsServicios');
+    contenedor.innerHTML = '';
+    serviciosIds.forEach(id => {
+        const input = document.createElement('input');
+        input.type  = 'hidden';
+        input.name  = 'servicios[]';
+        input.value = id;
+        contenedor.appendChild(input);
+    });
+
+    // Enviar el formulario PHP
+    document.getElementById('formCita').submit();
+}
 
 // ── FILA
 function salirFila() {
@@ -179,10 +402,9 @@ function likePost(btn) {
 function toggleComment(btn, id) {
     const box = document.getElementById(id);
     box.style.display = box.style.display === 'none' ? 'block' : 'none';
-    const span = btn.querySelector('span');
 }
 function addComment(btn) {
-    const box = btn.closest('.comment-box');
+    const box   = btn.closest('.comment-box');
     const input = box.querySelector('input');
     if (!input.value.trim()) return;
     input.value = '';
@@ -192,7 +414,6 @@ function eliminarPost(btn) {
     if (!confirm('¿Eliminar tu publicación?')) return;
     btn.closest('.post-card').remove();
 }
-
 function previewPostImg(e) {
     const f = e.target.files[0];
     if (f) {
@@ -204,7 +425,6 @@ function previewPostImg(e) {
         r.readAsDataURL(f);
     }
 }
-
 function publicar() {
     const content = document.getElementById('postContent').value.trim();
     if (!content) { alert('Escribe algo antes de publicar'); return; }
@@ -213,4 +433,6 @@ function publicar() {
     document.getElementById('postPreview').style.display = 'none';
     showPanel('muro');
 }
-renderCalendar();
+
+// ── INIT
+document.addEventListener('DOMContentLoaded', initCal);

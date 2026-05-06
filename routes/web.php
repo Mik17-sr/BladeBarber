@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BarberoController;
+use App\Http\Controllers\CitaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,10 +76,14 @@ Route::middleware(['auth', 'role:barbero'])->group(function () {
 Route::middleware(['auth', 'role:cliente'])->group(function () {
 
     Route::get('/dashboard_cliente', [ClienteController::class, 'dashboard'])
-    ->name('dashboard.cliente');
+        ->name('dashboard.cliente');
 
+    Route::get('/barbero/{id}/disponibilidad', [CitaController::class, 'disponibilidad'])
+        ->name('barbero.disponibilidad');
+
+    Route::post('/citas', [CitaController::class, 'store'])
+        ->name('citas.store');
 });
-
 /*
 |--------------------------------------------------------------------------
 | Admin
@@ -130,7 +135,14 @@ Route::middleware(['auth', 'role:admin'])
     )->name('barberia.update');
 
     Route::put('/posts/{id}', [AdminController::class, 'updatePost'])->name('posts.update');
-    Route::delete('/posts/{id}', [AdminController::class, 'destroyPost'])->name('posts.destroy');
+
+    Route::post('/services/store',
+        [AdminController::class, 'storeService']
+    )->name('services.store');
+
+    Route::delete('/services/{id}',
+        [AdminController::class, 'destroyService']
+    )->name('services.destroy');
 });
 
 /*
