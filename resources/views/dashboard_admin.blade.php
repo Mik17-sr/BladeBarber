@@ -154,6 +154,18 @@
         </svg>
         Ver Servicios
       </button>
+      <div class="nav-label">Fila de Espera</div>
+      <button class="nav-item" onclick="showPanel('fila-config')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6" />
+          <line x1="8" y1="12" x2="21" y2="12" />
+          <line x1="8" y1="18" x2="21" y2="18" />
+          <line x1="3" y1="6" x2="3.01" y2="6" />
+          <line x1="3" y1="12" x2="3.01" y2="12" />
+          <line x1="3" y1="18" x2="3.01" y2="18" />
+        </svg>
+        Fila Virtual
+      </button>
 
     </nav>
 
@@ -915,109 +927,143 @@
         @endif
       </div>
       <div class="panel" id="panel-agenda">
-        <div class="agenda-controls">
-          <div style="flex:1;">
+
+        {{-- Encabezado --}}
+        <div class="agenda-controls" style="flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+          <div style="flex:1;min-width:180px;">
             <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">Agenda Semanal</div>
-            <div style="font-size:13px;color:var(--muted2);">Citas y disponibilidad por barbero</div>
+            <div style="font-size:13px;color:var(--muted2);">
+              Semana del {{ $inicioSemana->format('d M') }} al {{ $finSemana->format('d M Y') }}
+            </div>
           </div>
+
+          {{-- Filtro por fecha --}}
+          <form method="GET" action="{{ route('admin.dashboard') }}"
+            style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div class="field-box" style="width:auto;">
+              <input type="hidden" name="panel" value="agenda">
+              <input type="date" name="fecha" value="{{ $fechaFiltro->toDateString() }}"
+                style="background:transparent;border:none;color:var(--text);font-size:13px;outline:none;">
+            </div>
+            <button type="submit" class="btn-gold" style="height:36px;padding:0 14px;font-size:12px;">
+              Filtrar
+            </button>
+          </form>
+
+          {{-- Navegación semana --}}
           <div class="week-nav">
-            <button class="week-nav-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <a href="{{ route('admin.dashboard', [
+          'semana' => $inicioSemana->copy()->subWeek()->toDateString(),
+          'panel'  => 'agenda'
+        ]) }}" class="week-nav-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="15 18 9 12 15 6" />
-              </svg></button>
-            <span class="week-label" id="weekLabel">Esta semana</span>
-            <button class="week-nav-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              </svg>
+            </a>
+            <span class="week-label">
+              {{ $inicioSemana->isSameWeek(now()) ? 'Esta semana' : $inicioSemana->format('d M') }}
+            </span>
+            <a href="{{ route('admin.dashboard', [
+          'semana' => $inicioSemana->copy()->addWeek()->toDateString(),
+          'panel'  => 'agenda'
+        ]) }}" class="week-nav-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="9 18 15 12 9 6" />
-              </svg></button>
+              </svg>
+            </a>
           </div>
         </div>
+
+        {{-- Grid semanal --}}
         <div class="schedule-grid">
-          @foreach(['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] as $i => $day)
-          <div class="day-col {{ $i == 2 ? 'today' : '' }}">
+          @php $diasSemana = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']; @endphp
+
+          @foreach($diasSemana as $i => $nombreDia)
+          @php
+          $fecha = $inicioSemana->copy()->addDays($i);
+          $fechaKey = $fecha->toDateString();
+          $esHoy = $fecha->isToday();
+          $citasDia = $citasSemana[$fechaKey] ?? collect();
+          @endphp
+
+          <div class="day-col {{ $esHoy ? 'today' : '' }}">
             <div class="day-hd">
-              <div class="day-name">{{ $day }}</div>
-              <div class="day-num">{{ 14 + $i }}</div>
+              <div class="day-name">{{ $nombreDia }}</div>
+              <div class="day-num">{{ $fecha->day }}</div>
             </div>
-            @if($i == 0)
-            <div class="slot slot--booked">
-              <div class="slot-time">9:00</div>
-              <div class="slot-name">Carlos R.</div>
+
+            @forelse($citasDia as $cita)
+            @php
+            $slotClass = match(strtolower($cita->estado)) {
+            'confirmada' => 'slot--booked',
+            'cancelada' => 'slot--cancel',
+            default => 'slot--pending',
+            };
+            @endphp
+            <div class="slot {{ $slotClass }}"
+              title="{{ optional($cita->cliente)->nombre }} — {{ optional($cita->barbero->usuario)->nombre ?? '' }} — {{ $cita->estado }}">
+              <div class="slot-time">
+                {{ \Carbon\Carbon::parse($cita->hora_cita)->format('H:i') }}
+              </div>
+              <div class="slot-name">
+                {{ \Illuminate\Support\Str::words(optional($cita->cliente)->nombre ?? '?', 1, '') }}
+              </div>
             </div>
-            <div class="slot slot--avail">
-              <div class="slot-time">11:00</div>
-              <div class="slot-name">Libre</div>
-            </div>@endif
-            @if($i == 1)
-            <div class="slot slot--booked">
-              <div class="slot-time">10:00</div>
-              <div class="slot-name">Miguel T.</div>
-            </div>@endif
-            @if($i == 2)
-            <div class="slot slot--booked">
-              <div class="slot-time">9:00</div>
-              <div class="slot-name">Juan L.</div>
-            </div>
-            <div class="slot slot--booked">
-              <div class="slot-time">14:00</div>
-              <div class="slot-name">Ana M.</div>
-            </div>
-            <div class="slot slot--avail">
-              <div class="slot-time">16:00</div>
-              <div class="slot-name">Libre</div>
-            </div>@endif
-            @if($i == 4)
-            <div class="slot slot--booked">
-              <div class="slot-time">11:00</div>
-              <div class="slot-name">Pedro G.</div>
-            </div>
-            <div class="slot slot--avail">
-              <div class="slot-time">15:00</div>
-              <div class="slot-name">Libre</div>
-            </div>@endif
-            @if($i == 5)
-            <div class="slot slot--booked">
-              <div class="slot-time">9:00</div>
-              <div class="slot-name">Luis M.</div>
-            </div>
-            <div class="slot slot--booked">
-              <div class="slot-time">10:30</div>
-              <div class="slot-name">Andrés C.</div>
-            </div>
-            <div class="slot slot--booked">
-              <div class="slot-time">12:00</div>
-              <div class="slot-name">Camilo R.</div>
-            </div>@endif
+            @empty
+            {{-- Día vacío --}}
+            @endforelse
           </div>
           @endforeach
         </div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;margin-bottom:14px;">Citas
-          del
-          Día</div>
+
+        {{-- Lista detallada del día filtrado --}}
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;margin:24px 0 14px;">
+          Citas del {{ $fechaFiltro->isoFormat('dddd D [de] MMMM') }}
+        </div>
+
+        @if(session('success'))
+        <div class="feedback feedback--ok" style="margin-bottom:14px;">
+          {{ session('success') }}
+        </div>
+        @endif
+
         <div class="appt-list">
-          @forelse($todayAppointments ?? [] as $appt)
+          @forelse($citasDelDia as $cita)
           <div class="appt-item">
-            <div class="appt-time">{{ $appt->time }}</div>
+
+            <div class="appt-time">
+              {{ \Carbon\Carbon::parse($cita->hora_cita)->format('H:i') }}
+            </div>
+
             <div class="appt-info">
-              <div class="appt-client">{{ $appt->client->name }}</div>
-              <div class="appt-service">{{ $appt->service }}</div>
-              <div class="appt-barber">Barbero: {{ $appt->barber->name }}</div>
+              <div class="appt-client">{{ optional($cita->cliente)->nombre ?? 'Cliente' }}</div>
+              <div class="appt-service">
+                {{ $cita->servicios->pluck('nombre')->join(', ') ?: '—' }}
+              </div>
+              <div class="appt-barber">
+                Barbero: {{ optional(optional($cita->barbero)->usuario)->nombre ?? '—' }}
+              </div>
             </div>
-            <div class="appt-dur">{{ $appt->duration }} min<br><span class="badge badge--green">Confirmado</span>
+
+            <div class="appt-dur" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+              @php
+              $estadoClass = match(strtolower($cita->estado)) {
+              'confirmada' => 'badge--green',
+              'cancelada' => 'badge--red',
+              default => 'badge--gold',
+              };
+              @endphp
+              <span class="badge {{ $estadoClass }}">{{ ucfirst($cita->estado) }}</span>
             </div>
+
           </div>
           @empty
-          @foreach([['09:00', 'Carlos Ruiz', 'Corte + Barba', 'Pedro G.', '60'], ['10:00', 'Miguel Torres', 'Corte Clásico', 'Luis M.', '45'], ['11:30', 'Juan López', 'Diseño', 'Andrés C.', '75'], ['14:00', 'Ana Martínez', 'Coloración', 'Camilo R.', '90'], ['15:30', 'Pedro Sánchez', 'Fade', 'Pedro G.', '50']] as $a)
-          <div class="appt-item">
-            <div class="appt-time">{{ $a[0] }}</div>
-            <div class="appt-info">
-              <div class="appt-client">{{ $a[1] }}</div>
-              <div class="appt-service">{{ $a[2] }}</div>
-              <div class="appt-barber">Barbero: {{ $a[3] }}</div>
-            </div>
-            <div class="appt-dur">{{ $a[4] }} min<br><span class="badge badge--green">Confirmado</span></div>
+          <div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">
+            No hay citas para este día.
           </div>
-          @endforeach
           @endforelse
         </div>
+
       </div>
 
       <!-- ===== ASIGNAR HORARIO ===== -->
@@ -1354,6 +1400,163 @@
             @empty
             <div style="text-align:center;color:var(--muted2);padding:20px;">
               No hay servicios registrados aún
+            </div>
+            @endforelse
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-fila-config">
+        <div style="margin-bottom:20px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">
+            Fila de Espera Virtual
+          </div>
+          <div style="font-size:13px;color:var(--muted2);">
+            Configura el intervalo en que la fila estará activa
+          </div>
+        </div>
+
+        @if(session('success'))
+        <div class="feedback feedback--ok" style="margin-bottom:16px;">{{ session('success') }}</div>
+        @endif
+
+        <div class="two-col">
+
+          {{-- Estado actual --}}
+          <div class="card">
+            <div class="card-hd"><span class="card-hd-title">Estado Actual</span></div>
+            <div class="card-body">
+              @php $filaVigente = \App\Models\ConfiguracionFila::vigente(); @endphp
+
+              @if($filaVigente)
+              <div class="shop-status shop-status--open" style="margin-bottom:16px;">
+                <div class="status-dot status-dot--open"></div>
+                <div>
+                  <div class="status-text status-text--open">FILA ACTIVA</div>
+                  <div style="font-size:11px;color:var(--muted);">
+                    Hasta {{ \Carbon\Carbon::parse($filaVigente->fecha_fin)->format('d M · H:i') }}
+                  </div>
+                </div>
+              </div>
+              <div style="font-size:12px;color:var(--muted2);margin-bottom:14px;">
+                Intervalo de atención: <strong>{{ $filaVigente->intervalo_atencion }} min</strong><br>
+                Inicio: {{ \Carbon\Carbon::parse($filaVigente->fecha_inicio)->format('d M Y · H:i') }}<br>
+                Fin: {{ \Carbon\Carbon::parse($filaVigente->fecha_fin)->format('d M Y · H:i') }}
+              </div>
+              <form action="{{ route('admin.fila.config.desactivar') }}" method="POST">
+                @csrf
+                <button type="submit" class="toggle-btn toggle-btn--close" style="width:100%;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                  Desactivar Fila
+                </button>
+              </form>
+
+              @else
+              <div class="shop-status shop-status--closed" style="margin-bottom:16px;">
+                <div class="status-dot status-dot--closed"></div>
+                <div>
+                  <div class="status-text status-text--closed">FILA INACTIVA</div>
+                  <div style="font-size:11px;color:var(--muted);">
+                    Configura un intervalo para activarla
+                  </div>
+                </div>
+              </div>
+              <div style="font-size:12px;color:var(--muted2);padding:12px;
+                            background:rgba(255,255,255,.04);border-radius:8px;text-align:center;">
+                Las citas normales están disponibles
+              </div>
+              @endif
+            </div>
+          </div>
+
+          {{-- Formulario nueva configuración --}}
+          <div class="card">
+            <div class="card-hd"><span class="card-hd-title">Nueva Configuración</span></div>
+            <div class="card-body">
+              <form action="{{ route('admin.fila.config.store') }}" method="POST">
+                @csrf
+                <div style="display:flex;flex-direction:column;gap:14px;">
+
+                  <div class="field-wrap">
+                    <label class="field-lbl">Inicio de la fila</label>
+                    <div class="field-box">
+                      <input type="datetime-local" name="fecha_inicio"
+                        value="{{ old('fecha_inicio', now()->format('Y-m-d\TH:i')) }}"
+                        style="background:transparent;border:none;color:var(--text);width:100%;outline:none;">
+                    </div>
+                  </div>
+
+                  <div class="field-wrap">
+                    <label class="field-lbl">Fin de la fila</label>
+                    <div class="field-box">
+                      <input type="datetime-local" name="fecha_fin"
+                        value="{{ old('fecha_fin', now()->addHours(4)->format('Y-m-d\TH:i')) }}"
+                        style="background:transparent;border:none;color:var(--text);width:100%;outline:none;">
+                    </div>
+                  </div>
+
+                  <div class="field-wrap">
+                    <label class="field-lbl">Intervalo de atención (minutos)</label>
+                    <div class="field-box">
+                      <input type="number" name="intervalo_atencion"
+                        value="{{ old('intervalo_atencion', 30) }}"
+                        min="5" max="120" placeholder="30">
+                    </div>
+                  </div>
+
+                  @if($errors->any())
+                  <div style="color:#ff5c5c;font-size:12px;">
+                    @foreach($errors->all() as $e)<div>• {{ $e }}</div>@endforeach
+                  </div>
+                  @endif
+
+                  <button type="submit" class="btn-gold">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="9 11 12 14 22 4" />
+                      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                    </svg>
+                    Activar Fila de Espera
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+        </div>
+
+        {{-- Fila en tiempo real --}}
+        <div class="card" style="margin-top:20px;">
+          <div class="card-hd">
+            <span class="card-hd-title">Fila Actual</span>
+            <span class="badge badge--gold">
+              {{ \App\Models\FilaEspera::whereIn('estado',['esperando','asignado','en_atencion'])->count() }}
+              en espera
+            </span>
+          </div>
+          <div class="card-body" style="padding:14px 16px;">
+            @forelse(\App\Models\FilaEspera::with(['cliente.usuario','servicios'])
+            ->whereIn('estado',['esperando','asignado','en_atencion'])
+            ->orderBy('posicion')->get() as $turno)
+            <div class="list-item">
+              <div class="li-avatar" style="background:var(--gold);color:#000;font-weight:700;">
+                {{ $turno->posicion }}
+              </div>
+              <div class="li-info">
+                <div class="li-name">{{ $turno->cliente->usuario->nombre ?? '—' }}</div>
+                <div class="li-sub">{{ $turno->servicios->pluck('nombre')->join(', ') }}</div>
+              </div>
+              <span class="badge {{ match($turno->estado) {
+                    'en_atencion' => 'badge--green',
+                    'asignado'    => 'badge-gold',
+                    default       => 'badge--gold'
+                } }}">{{ ucfirst(str_replace('_',' ',$turno->estado)) }}</span>
+            </div>
+            @empty
+            <div style="text-align:center;padding:24px;color:var(--muted2);font-size:13px;">
+              La fila está vacía
             </div>
             @endforelse
           </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barbero;
+use App\Models\Cita;
 use App\Models\Configuracion;
 use App\Models\Publicacion;
 use App\Models\User;
@@ -131,16 +132,42 @@ class AdminController extends Controller
         return back();
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $posts = Publicacion::with(['imagenes', 'muro.usuario'])
-                ->orderBy('fecha', 'desc')
-                ->get();
-        $config   = Configuracion::first();
-        $barberos = Barbero::with('usuario')->get();
+        $posts     = Publicacion::with(['imagenes', 'muro.usuario'])
+                        ->orderBy('fecha', 'desc')
+                        ->get();
+        $config    = Configuracion::first();
+        $barberos  = Barbero::with('usuario')->get();
         $servicios = Servicio::all();
-        return view('dashboard_admin', compact('posts', 'config', 'barberos', 'servicios'));
-        
+        $semanaParam  = $request->input('semana');
+        $inicioSemana = $semanaParam
+            ? \Carbon\Carbon::parse($semanaParam)->startOfWeek(\Carbon\Carbon::MONDAY)
+            : now()->startOfWeek(\Carbon\Carbon::MONDAY);
+        $finSemana = $inicioSemana->copy()->endOfWeek(\Carbon\Carbon::SUNDAY);
+
+        $fechaFiltro = $request->filled('fecha')
+            ? \Carbon\Carbon::parse($request->input('fecha'))
+            : now();
+
+        $citasSemana = Cita::with(['cliente', 'servicios', 'barbero'])
+            ->whereBetween('hora_cita', [
+                $inicioSemana->copy()->startOfDay(),
+                $finSemana->copy()->endOfDay(),
+            ])
+            ->get()
+            ->groupBy(fn($c) => \Carbon\Carbon::parse($c->hora_cita)->toDateString());
+
+        $citasDelDia = Cita::with(['cliente', 'servicios', 'barbero'])
+            ->whereDate('hora_cita', $fechaFiltro->toDateString())
+            ->orderBy('hora_cita')
+            ->get();
+
+        return view('dashboard_admin', compact(
+            'posts', 'config', 'barberos', 'servicios',
+            'inicioSemana', 'finSemana', 'fechaFiltro',
+            'citasSemana', 'citasDelDia'
+        ));
     }
 
     public function toggleBarber($id)

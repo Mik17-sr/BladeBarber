@@ -9,7 +9,10 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BarberoController;
+use App\Http\Controllers\BarberoFilaController;
 use App\Http\Controllers\CitaController;
+use App\Http\Controllers\FilaConfigController;
+use App\Http\Controllers\FilaEsperaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -84,6 +87,20 @@ Route::middleware(['auth', 'role:cliente'])->group(function () {
 
     Route::post('/citas', [CitaController::class, 'store'])
         ->name('citas.store');
+
+    Route::get('/citas/{id}/reprogramar',  [ClienteController::class, 'reprogramarForm'])
+        ->name('citas.reprogramar.form');
+
+    Route::put('/citas/{id}/reprogramar',  [ClienteController::class, 'reprogramar'])
+        ->name('citas.reprogramar');
+
+    Route::get('/citas/slots-disponibles', [ClienteController::class, 'slotsDisponibles'])
+        ->name('citas.slots');
+
+    Route::patch('/citas/{id}/cancelar', [ClienteController::class, 'cancelar'])->name('citas.cancelar');
+
+    Route::post('/fila/ingresar', [FilaEsperaController::class, 'ingresar'])->name('fila.ingresar');
+    Route::delete('/fila/salir', [FilaEsperaController::class, 'salir'])->name('fila.salir');
 });
 /*
 |--------------------------------------------------------------------------
@@ -144,6 +161,12 @@ Route::middleware(['auth', 'role:admin'])
     Route::delete('/services/{id}',
         [AdminController::class, 'destroyService']
     )->name('services.destroy');
+
+    Route::get('/dashboard', [AdminController::class, 'index'])
+    ->name('dashboard');
+
+    Route::post('/fila/config', [FilaConfigController::class, 'store'])->name('fila.config.store');
+    Route::post('/fila/desactivar', [FilaConfigController::class, 'desactivar'])->name('fila.config.desactivar');
 });
 
 /*
@@ -184,6 +207,15 @@ Route::middleware(['auth', 'role:barbero'])
 
     Route::get('/atender', [BarberoController::class, 'atenderPanel'])->name('atender');
     Route::post('/atender/{id}', [BarberoController::class, 'completarCita'])->name('atender.completar');
+
+    Route::get('/fila', [BarberoFilaController::class, 'index'])->name('fila');
+    Route::post('/fila/{id}/iniciar', [BarberoFilaController::class, 'iniciar'])->name('fila.iniciar');
+    Route::post('/fila/{id}/finalizar', [BarberoFilaController::class, 'finalizar'])->name('fila.finalizar');
+    Route::post('/fila/{id}/cancelar', [BarberoFilaController::class, 'cancelar'])->name('fila.cancelar');
+    Route::post('/services/store',
+            [BarberoController::class, 'storeService']
+    )->name('services.store');
+
 });
 
 Route::get('/citas/horas-ocupadas', [CitaController::class, 'horasOcupadas'])

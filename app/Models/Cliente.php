@@ -16,6 +16,4 @@ class Cliente extends Model
     {
         return $this->belongsTo(Usuario::class, 'id_cliente', 'id_usuario');
     }
-
-    
 }

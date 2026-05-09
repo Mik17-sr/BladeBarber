@@ -72,8 +72,19 @@
                 </svg>
                 Contraseña
             </button>
-
+            
             <div class="nav-label">Barbería</div>
+            @if($filaActiva)
+            <button class="nav-item" onclick="showPanel('agenda')" disabled style="pointer-events:none;opacity:0.6;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                Agendar Cita
+            </button>
+            @else
             <button class="nav-item" onclick="showPanel('agenda')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -83,6 +94,7 @@
                 </svg>
                 Agendar Cita
             </button>
+            @endif
             <button class="nav-item" onclick="showPanel('mis-citas')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -137,10 +149,10 @@
         <div class="sidebar-foot">
             <div class="avatar-sm">
                 @if(auth()->user()->foto)
-                    <img src="{{ asset('storage/' . auth()->user()->foto) }}"
-                        style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                <img src="{{ asset('storage/' . auth()->user()->foto) }}"
+                    style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                 @else
-                    {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+                {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
                 @endif
             </div>
             <div class="foot-info">
@@ -283,15 +295,20 @@
                                 <span class="badge badge--amber">Pendiente</span>
                             </div>
                             <div style="margin-top:14px;">
+                                @if($filaActiva)
+                                <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);
+                                            border-radius:10px;padding:14px;text-align:center;">
+                                    <div style="color:var(--red);font-weight:500;margin-bottom:6px;">Agendamiento deshabilitado</div>
+                                    <div style="font-size:12px;color:var(--muted2);">La fila de espera virtual está activa.</div>
+                                    <button class="btn-violet" style="margin-top:10px;width:100%;" onclick="showPanel('fila')">
+                                        Ir a la fila de espera
+                                    </button>
+                                </div>
+                                @else
                                 <button class="btn-violet" style="width:100%;" onclick="showPanel('agenda')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect x="3" y="4" width="18" height="18" rx="2" />
-                                        <line x1="16" y1="2" x2="16" y2="6" />
-                                        <line x1="8" y1="2" x2="8" y2="6" />
-                                        <line x1="3" y1="10" x2="21" y2="10" />
-                                    </svg>
                                     Agendar Nueva Cita
                                 </button>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -364,10 +381,10 @@
                 <div class="profile-hero">
                     <div class="avatar-lg" onclick="showPanel('profile-edit')">
                         @if(auth()->user()->foto)
-                            <img src="{{ asset('storage/' . auth()->user()->foto) }}"
-                                style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        <img src="{{ asset('storage/' . auth()->user()->foto) }}"
+                            style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                         @else
-                            {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+                        {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
                         @endif
                         <div class="avatar-overlay">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -453,10 +470,10 @@
                 <div class="profile-hero" style="margin-bottom:20px;">
                     <div class="avatar-lg" style="cursor:pointer;">
                         @if(auth()->user()->foto)
-                            <img src="{{ asset('storage/' . auth()->user()->foto) }}"
-                                style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        <img src="{{ asset('storage/' . auth()->user()->foto) }}"
+                            style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                         @else
-                            {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+                        {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
                         @endif
                         <div class="avatar-overlay">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -625,27 +642,27 @@
                         <div class="card-body">
                             <div class="service-grid" id="serviceGrid">
                                 @forelse ($servicios as $servicio)
-                                            <div class="service-card" onclick="toggleService(this,
+                                <div class="service-card" onclick="toggleService(this,
                                     {{ $servicio->id_servicio }},
                                     '{{ $servicio->nombre }}',
                                     {{ $servicio->precio }},
                                     {{ $servicio->duracion }})" data-id="{{ $servicio->id_servicio }}">
 
-                                                <div class="service-check">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                                        <polyline points="20 6 9 17 4 12" />
-                                                    </svg>
-                                                </div>
-
-                                                <div class="service-name">✂ {{ $servicio->nombre }}</div>
-                                                <div class="service-price">${{ number_format($servicio->precio, 0, ',', '.') }}
-                                                </div>
-                                                <div class="service-dur">{{ $servicio->duracion }} min · Servicio disponible</div>
-                                            </div>
-                                @empty
-                                    <div style="text-align:center;color:var(--muted2);grid-column:1/-1;">
-                                        No hay servicios disponibles
+                                    <div class="service-check">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg>
                                     </div>
+
+                                    <div class="service-name">✂ {{ $servicio->nombre }}</div>
+                                    <div class="service-price">${{ number_format($servicio->precio, 0, ',', '.') }}
+                                    </div>
+                                    <div class="service-dur">{{ $servicio->duracion }} min · Servicio disponible</div>
+                                </div>
+                                @empty
+                                <div style="text-align:center;color:var(--muted2);grid-column:1/-1;">
+                                    No hay servicios disponibles
+                                </div>
                                 @endforelse
                             </div>
 
@@ -689,32 +706,32 @@
                             <div class="barber-pick-grid">
 
                                 @forelse ($barberos as $barbero)
-                                    <div class="barber-pick"
-                                        onclick="selectBarber(this, '{{ $barbero->usuario->nombre }}', {{ $barbero->id_barbero }})"
-                                        data-id="{{ $barbero->id_barbero }}">
+                                <div class="barber-pick"
+                                    onclick="selectBarber(this, '{{ $barbero->usuario->nombre }}', {{ $barbero->id_barbero }})"
+                                    data-id="{{ $barbero->id_barbero }}">
 
-                                        {{-- Avatar --}}
-                                        <div class="bp-avatar"
-                                            style="overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                                    {{-- Avatar --}}
+                                    <div class="bp-avatar"
+                                        style="overflow:hidden; display:flex; align-items:center; justify-content:center;">
 
-                                            @if ($barbero->usuario->foto)
-                                                <img src="{{ asset('storage/' . $barbero->usuario->foto) }}"
-                                                    style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-                                            @else
-                                                {{ strtoupper(substr($barbero->usuario->nombre, 0, 1)) }}
-                                            @endif
+                                        @if ($barbero->usuario->foto)
+                                        <img src="{{ asset('storage/' . $barbero->usuario->foto) }}"
+                                            style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                                        @else
+                                        {{ strtoupper(substr($barbero->usuario->nombre, 0, 1)) }}
+                                        @endif
 
-                                        </div>
-
-                                        {{-- Nombre --}}
-                                        <div class="bp-name">
-                                            {{ $barbero->usuario->nombre }}
-                                        </div>
                                     </div>
+
+                                    {{-- Nombre --}}
+                                    <div class="bp-name">
+                                        {{ $barbero->usuario->nombre }}
+                                    </div>
+                                </div>
                                 @empty
-                                    <div style="text-align:center;color:var(--muted2);grid-column:1/-1;">
-                                        No hay barberos disponibles
-                                    </div>
+                                <div style="text-align:center;color:var(--muted2);grid-column:1/-1;">
+                                    No hay barberos disponibles
+                                </div>
                                 @endforelse
                             </div>
                             <div style="margin-top:20px;display:flex;gap:10px;justify-content:space-between;">
@@ -886,54 +903,67 @@
                 </div>
                 <div class="my-appts">
                     @forelse($citas as $cita)
-                        <div class="my-appt-card">
-                            <div class="my-appt-top">
-                                <div class="appt-date-box">
-                                    <div class="appt-date-day">
-                                        {{ \Carbon\Carbon::parse($cita->fecha)->format('d') }}
-                                    </div>
-                                    <div class="appt-date-mon">
-                                        {{ \Carbon\Carbon::parse($cita->fecha)->translatedFormat('M') }}
-                                    </div>
+                    <div class="my-appt-card">
+                        <div class="my-appt-top">
+                            <div class="appt-date-box">
+                                <div class="appt-date-day">
+                                    {{ \Carbon\Carbon::parse($cita->fecha_cita)->format('d') }}
                                 </div>
-
-                                <div class="appt-detail">
-                                    <div class="appt-title">
-                                        {{ $cita->servicios->pluck('nombre')->join(' + ') }}
-                                    </div>
-                                    <div class="appt-meta">
-                                        {{ \Carbon\Carbon::parse($cita->hora_cita)->format('h:i A') }}
-                                        · {{ $cita->barbero->usuario->nombre ?? 'Barbero' }}
-                                        · {{ $cita->servicios->sum('duracion') ?? '60' }} min
-                                    </div>
+                                <div class="appt-date-mon">
+                                    {{ \Carbon\Carbon::parse($cita->fecha_cita)->translatedFormat('M') }}
                                 </div>
-
-                                <span class="badge badge--violet">
-                                    {{ $cita->estado ?? 'Pendiente' }}
-                                </span>
                             </div>
 
-                            <div class="my-appt-footer">
-                                <span style="font-size:13px;color:var(--muted2);">
-                                    ${{ number_format($cita->servicios->sum('precio'), 0, ',', '.') }}
-                                </span>
+                            <div class="appt-detail">
+                                <div class="appt-title">
+                                    {{ $cita->servicios->pluck('nombre')->join(' + ') }}
+                                </div>
+                                <div class="appt-meta">
+                                    {{ \Carbon\Carbon::parse($cita->hora_cita)->format('h:i A') }}
+                                    · {{ $cita->barbero->usuario->nombre ?? 'Barbero' }}
+                                    · {{ $cita->servicios->sum('duracion') ?? '60' }} min
+                                </div>
+                            </div>
 
-                                <div style="margin-left:auto;display:flex;gap:8px;">
-                                    <button class="btn-outline" style="height:32px;padding:0 14px;font-size:12px;"
-                                        onclick="alert('Cita cancelada')">
+                            <span class="badge badge--violet">
+                                {{ $cita->estado ?? 'Pendiente' }}
+                            </span>
+                        </div>
+
+                        <div class="my-appt-footer">
+                            <span style="font-size:13px;color:var(--muted2);">
+                                ${{ number_format($cita->servicios->sum('precio'), 0, ',', '.') }}
+                            </span>
+
+                            <div style="margin-left:auto;display:flex;gap:8px;">
+                                @if(in_array($cita->estado, ['Pendiente', 'Confirmada']))
+                                <form method="POST" action="{{ route('citas.cancelar', $cita->id_cita) }}"
+                                    onsubmit="return confirm('¿Seguro que deseas cancelar esta cita?')">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="btn-outline"
+                                        style="height:32px;padding:0 14px;font-size:12px;
+               border-color:rgba(248,113,113,0.3);color:var(--red);">
                                         Cancelar
                                     </button>
-
-                                    <button class="btn-outline"
-                                        style="height:32px;padding:0 14px;font-size:12px;border-color:rgba(139,92,246,0.4);color:var(--violet-light);"
-                                        onclick="showPanel('agenda')">
-                                        Reprogramar
-                                    </button>
-                                </div>
+                                </form>
+                                @endif
+                                @if(in_array($cita->estado, ['Pendiente', 'Confirmada']))
+                                <a href="{{ route('citas.reprogramar.form', $cita->id_cita) }}"
+                                    class="btn-outline"
+                                    style="height:32px;padding:0 14px;font-size:12px;
+              border-color:rgba(139,92,246,0.4);
+              color:var(--violet-light);
+              display:inline-flex;align-items:center;
+              text-decoration:none;">
+                                    Reprogramar
+                                </a>
+                                @endif
                             </div>
                         </div>
+                    </div>
                     @empty
-                        <p style="color:var(--muted2);">No tienes citas registradas.</p>
+                    <p style="color:var(--muted2);">No tienes citas registradas.</p>
                     @endforelse
                 </div>
             </div>
@@ -941,39 +971,67 @@
             <!-- ===== FILA DE ESPERA ===== -->
             <div class="panel" id="panel-fila">
                 <div style="margin-bottom:20px;">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">Fila de Espera
-                    </div>
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">Fila de Espera</div>
                     <div style="font-size:13px;color:var(--muted2);">Turno virtual en tiempo real</div>
                 </div>
 
-                <div id="queueHeroSection">
-                    <div class="queue-hero">
-                        <div class="queue-label">Tu posición actual</div>
-                        <div class="queue-number">#3</div>
-                        <div style="font-size:14px;color:var(--muted2);">Hay 2 personas antes que tú</div>
-                        <div class="queue-status-row">
-                            <div class="queue-pill">
-                                <div class="queue-dot"></div>
-                                En espera activa
-                            </div>
-                            <div class="queue-pill">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <polyline points="12 6 12 12 16 14" />
-                                </svg>
-                                ~20 min
-                            </div>
-                            <div class="queue-pill">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                    <circle cx="9" cy="7" r="4" />
-                                </svg>
-                                Luis Mora
-                            </div>
+                @php
+                $filaActiva = \App\Models\ConfiguracionFila::vigente();
+                $idCliente = auth()->user()->cliente->id_cliente ?? null;
+                $miTurno = $idCliente ? \App\Models\FilaEspera::with('servicios')
+                ->where('id_cliente', $idCliente)
+                ->whereIn('estado', ['esperando','asignado','en_atencion'])
+                ->first() : null;
+                $totalFila = \App\Models\FilaEspera::whereIn('estado',['esperando','asignado','en_atencion'])->count();
+                @endphp
+
+                @if(!$filaActiva)
+                {{-- Fila inactiva --}}
+                <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+            border-radius:12px;padding:28px;text-align:center;margin-bottom:20px;">
+                    <div style="font-size:14px;color:var(--muted2);margin-bottom:6px;">
+                        La fila de espera no está disponible ahora.
+                    </div>
+                    <div style="font-size:12px;color:var(--muted);">
+                        Puedes agendar tu cita de manera normal.
+                    </div>
+                    <button class="btn-violet" style="margin-top:14px;" onclick="showPanel('agenda')">
+                        Agendar Cita
+                    </button>
+                </div>
+
+                @elseif($miTurno)
+                {{-- Ya estoy en la fila --}}
+                <div class="queue-hero">
+                    <div class="queue-label">Tu posición actual</div>
+                    <div class="queue-number">#{{ $miTurno->posicion }}</div>
+                    <div style="font-size:14px;color:var(--muted2);">
+                        Hay {{ $miTurno->posicion - 1 }} {{ $miTurno->posicion - 1 === 1 ? 'persona' : 'personas' }} antes que tú
+                    </div>
+                    <div class="queue-status-row">
+                        <div class="queue-pill">
+                            <div class="queue-dot"></div>
+                            {{ ucfirst(str_replace('_',' ', $miTurno->estado)) }}
                         </div>
-                        <div style="margin-top:16px;">
-                            <button class="btn-outline" style="border-color:rgba(248,113,113,0.3);color:var(--red);"
-                                onclick="salirFila()">
+                        <div class="queue-pill">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            ~{{ ($miTurno->posicion - 1) * 20 }} min
+                        </div>
+                    </div>
+                    <div style="margin-top:10px;font-size:12px;color:var(--muted2);">
+                        Servicios: {{ $miTurno->servicios->pluck('nombre')->join(', ') }}
+                    </div>
+                    <div style="margin-top:16px;position:relative;z-index:10;">
+                        <form method="POST" action="{{ route('fila.salir') }}"
+                            onsubmit="return confirm('¿Seguro que quieres salir de la fila?')">
+                            @csrf @method('DELETE')
+                            <button type="submit"
+                                class="btn-outline"
+                                style="border-color:rgba(248,113,113,0.3);color:var(--red);
+                   position:relative;z-index:10;pointer-events:all;">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                     style="width:15px;height:15px;">
                                     <line x1="18" y1="6" x2="6" y2="18" />
@@ -981,77 +1039,86 @@
                                 </svg>
                                 Salir de la fila
                             </button>
-                        </div>
+                        </form>
                     </div>
                 </div>
 
-                <div id="joinQueueSection" style="display:none;">
-                    <div class="join-queue-card">
-                        <div class="big-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="8" y1="6" x2="21" y2="6" />
-                                <line x1="8" y1="12" x2="21" y2="12" />
-                                <line x1="8" y1="18" x2="21" y2="18" />
-                                <line x1="3" y1="6" x2="3.01" y2="6" />
-                                <line x1="3" y1="12" x2="3.01" y2="12" />
-                                <line x1="3" y1="18" x2="3.01" y2="18" />
-                            </svg>
+                @else
+                {{-- Fila activa pero cliente no está --}}
+                <div class="join-queue-card">
+                    <div class="big-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="8" y1="6" x2="21" y2="6" />
+                            <line x1="8" y1="12" x2="21" y2="12" />
+                            <line x1="8" y1="18" x2="21" y2="18" />
+                            <line x1="3" y1="6" x2="3.01" y2="6" />
+                        </svg>
+                    </div>
+                    <h3>¿Listo para hacer fila?</h3>
+                    <p>Hay {{ $totalFila }} {{ $totalFila === 1 ? 'persona' : 'personas' }} en espera ahora</p>
+
+                    <form method="POST" action="{{ route('fila.ingresar') }}"
+                        style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:300px;margin:0 auto;">
+                        @csrf
+                        <div class="field-wrap" style="width:100%;">
+                            <label class="field-lbl">Selecciona tus servicios</label>
+                            @foreach($servicios as $srv)
+                            <label style="display:flex;align-items:center;gap:8px;margin-top:8px;
+                          font-size:13px;cursor:pointer;color:var(--text);">
+                                <input type="checkbox" name="servicios[]" value="{{ $srv->id_servicio }}"
+                                    style="accent-color:var(--violet);">
+                                {{ $srv->nombre }}
+                                <span style="color:var(--muted2);font-size:11px;">
+                                    ${{ number_format($srv->precio, 0, ',', '.') }}
+                                </span>
+                            </label>
+                            @endforeach
                         </div>
-                        <h3>¿Listo para hacer fila?</h3>
-                        <p>Registra tu turno virtual y te avisamos cuando sea tu momento</p>
-                        <div class="field-wrap" style="max-width:280px;margin:0 auto 16px;">
-                            <label class="field-lbl">Servicio</label>
-                            <div class="field-box">
-                                <select style="width:100%;">
-                                    <option>Corte Clásico</option>
-                                    <option>Corte + Barba</option>
-                                    <option>Fade Premium</option>
-                                    <option>Arreglo de Barba</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button class="btn-violet" onclick="entrarFila()">
+
+                        @if($errors->has('servicios'))
+                        <div style="color:#f87171;font-size:12px;">{{ $errors->first('servicios') }}</div>
+                        @endif
+
+                        <button type="submit" class="btn-violet" style="width:100%;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="12" y1="5" x2="12" y2="19" />
                                 <line x1="5" y1="12" x2="19" y2="12" />
                             </svg>
                             Unirme a la Fila
                         </button>
-                    </div>
+                    </form>
                 </div>
+                @endif
 
-                <div class="card">
+                {{-- Lista fila actual (siempre visible) --}}
+                <div class="card" style="margin-top:20px;">
                     <div class="card-hd">
                         <span class="card-hd-title">Fila Actual</span>
-                        <span class="badge badge--violet">3 en espera</span>
+                        <span class="badge badge--violet">{{ $totalFila }} en espera</span>
                     </div>
                     <div class="card-body" style="padding:14px 16px;">
-                        <div class="queue-list" id="queueList">
-                            <div class="queue-item">
-                                <div class="queue-pos">1</div>
-                                <div class="queue-info">
-                                    <div class="queue-name">Carlos R.</div>
-                                    <div class="queue-detail">Corte + Barba · Luis Mora</div>
+                        @forelse(\App\Models\FilaEspera::with('cliente.usuario')
+                        ->whereIn('estado',['esperando','asignado','en_atencion'])
+                        ->orderBy('posicion')->get() as $t)
+                        @php $esMio = $idCliente && $t->id_cliente == $idCliente; @endphp
+                        <div class="queue-item {{ $esMio ? 'is-me' : '' }}">
+                            <div class="queue-pos {{ $esMio ? 'is-me' : '' }}">{{ $t->posicion }}</div>
+                            <div class="queue-info">
+                                <div class="queue-name {{ $esMio ? 'is-me' : '' }}">
+                                    {{ $esMio ? (($t->cliente->usuario->nombre ?? '—') . ' · (Tú)') : 'Cliente #'.$t->posicion }}
                                 </div>
-                                <div class="queue-wait"><strong>En silla</strong>atendiendo</div>
+                                <div class="queue-detail">{{ ucfirst(str_replace('_',' ',$t->estado)) }}</div>
                             </div>
-                            <div class="queue-item">
-                                <div class="queue-pos">2</div>
-                                <div class="queue-info">
-                                    <div class="queue-name">Miguel T.</div>
-                                    <div class="queue-detail">Fade · Pedro Gómez</div>
-                                </div>
-                                <div class="queue-wait"><strong>~10 min</strong>próximo</div>
-                            </div>
-                            <div class="queue-item is-me">
-                                <div class="queue-pos is-me">3</div>
-                                <div class="queue-info">
-                                    <div class="queue-name is-me">Juan Pérez · (Tú)</div>
-                                    <div class="queue-detail">Corte Clásico · Luis Mora</div>
-                                </div>
-                                <div class="queue-wait"><strong>~20 min</strong>tu turno</div>
+                            <div class="queue-wait">
+                                <strong>~{{ ($t->posicion - 1) * 20 }} min</strong>
+                                {{ $t->estado === 'en_atencion' ? 'atendiendo' : 'espera' }}
                             </div>
                         </div>
+                        @empty
+                        <div style="text-align:center;padding:20px;color:var(--muted2);font-size:13px;">
+                            La fila está vacía
+                        </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -1139,107 +1206,107 @@
 
                 <div class="posts-list">
                     @forelse($publicaciones as $pub)
-                        @php
-                            $usuario = $pub->muro->usuario;
-                            $rol = $usuario->rol ?? 'cliente';
-                            $inicial = strtoupper(substr($usuario->nombre, 0, 1));
-                            $esMio = $usuario->id_usuario === auth()->id();
+                    @php
+                    $usuario = $pub->muro->usuario;
+                    $rol = $usuario->rol ?? 'cliente';
+                    $inicial = strtoupper(substr($usuario->nombre, 0, 1));
+                    $esMio = $usuario->id_usuario === auth()->id();
 
-                            $badgeClass = match (strtolower($rol)) {
-                                'admin' => 'badge--violet',
-                                'barbero' => 'badge--green',
-                                default => 'badge--amber',
-                            };
-                            $badgeLabel = match (strtolower($rol)) {
-                                'admin' => 'Admin',
-                                'barbero' => 'Barbero',
-                                default => 'Cliente',
-                            };
-                        @endphp
+                    $badgeClass = match (strtolower($rol)) {
+                    'admin' => 'badge--violet',
+                    'barbero' => 'badge--green',
+                    default => 'badge--amber',
+                    };
+                    $badgeLabel = match (strtolower($rol)) {
+                    'admin' => 'Admin',
+                    'barbero' => 'Barbero',
+                    default => 'Cliente',
+                    };
+                    @endphp
 
-                        <div class="post-card">
-                            <div class="post-head">
-                                @if($usuario->foto)
-                                    <div class="li-avatar" style="padding:0;overflow:hidden;">
-                                        <img src="{{ asset('storage/' . $usuario->foto) }}"
-                                            style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-                                    </div>
-                                @else
-                                    <div class="li-avatar">{{ $inicial }}</div>
-                                @endif
-
-                                <div class="post-meta">
-                                    <div class="post-author">
-                                        {{ $usuario->nombre }}
-                                        @if($esMio) <span style="color:var(--muted2);font-size:11px;">· (Tú)</span> @endif
-                                    </div>
-                                    <div class="post-time">{{ $pub->fecha->diffForHumans() }}</div>
-                                </div>
-
-                                <span class="badge {{ $badgeClass }}">{{ $badgeLabel }}</span>
-
-                                @if($esMio)
-                                    <form method="POST" action="{{ route('publicacion.destroy', $pub->id_publicacion) }}"
-                                        style="margin-left:auto;">
-                                        @csrf @method('DELETE')
-                                        <button type="submit"
-                                            style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;"
-                                            title="Eliminar">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                style="width:15px;height:15px;">
-                                                <polyline points="3 6 5 6 21 6" />
-                                                <path d="M19 6l-1 14H6L5 6" />
-                                                <path d="M10 11v6M14 11v6" />
-                                                <path d="M9 6V4h6v2" />
-                                            </svg>
-                                        </button>
-                                    </form>
-                                @endif
+                    <div class="post-card">
+                        <div class="post-head">
+                            @if($usuario->foto)
+                            <div class="li-avatar" style="padding:0;overflow:hidden;">
+                                <img src="{{ asset('storage/' . $usuario->foto) }}"
+                                    style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                             </div>
-
-                            @if($pub->imagenes->count())
-                                <img src="{{ asset('storage/' . $pub->imagenes->first()->imagen) }}"
-                                    style="width:100%;max-height:300px;object-fit:cover;">
+                            @else
+                            <div class="li-avatar">{{ $inicial }}</div>
                             @endif
 
-                            <div class="post-body">
-                                <p class="post-text">{{ $pub->contenido }}</p>
-                            </div>
-
-                            <div class="post-footer">
-                                <button class="post-action" onclick="likePost(this)">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path
-                                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                                    </svg>
-                                    <span>0</span>
-                                </button>
-                                <button class="post-action" onclick="toggleComment(this,'c{{ $pub->id_publicacion }}')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                                    </svg>
-                                    <span>0</span>
-                                </button>
-                            </div>
-
-                            <div class="comment-box" id="c{{ $pub->id_publicacion }}"
-                                style="display:none;padding:12px 16px;border-top:1px solid var(--border2);">
-                                <div style="display:flex;gap:8px;">
-                                    <div class="li-avatar" style="flex-shrink:0;">
-                                        {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
-                                    </div>
-                                    <div class="field-box" style="flex:1;height:38px;">
-                                        <input type="text" placeholder="Escribe un comentario..." style="font-size:13px;">
-                                    </div>
-                                    <button class="btn-violet" style="height:38px;padding:0 14px;font-size:12px;"
-                                        onclick="addComment(this)">Enviar</button>
+                            <div class="post-meta">
+                                <div class="post-author">
+                                    {{ $usuario->nombre }}
+                                    @if($esMio) <span style="color:var(--muted2);font-size:11px;">· (Tú)</span> @endif
                                 </div>
+                                <div class="post-time">{{ $pub->fecha->diffForHumans() }}</div>
+                            </div>
+
+                            <span class="badge {{ $badgeClass }}">{{ $badgeLabel }}</span>
+
+                            @if($esMio)
+                            <form method="POST" action="{{ route('publicacion.destroy', $pub->id_publicacion) }}"
+                                style="margin-left:auto;">
+                                @csrf @method('DELETE')
+                                <button type="submit"
+                                    style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;"
+                                    title="Eliminar">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        style="width:15px;height:15px;">
+                                        <polyline points="3 6 5 6 21 6" />
+                                        <path d="M19 6l-1 14H6L5 6" />
+                                        <path d="M10 11v6M14 11v6" />
+                                        <path d="M9 6V4h6v2" />
+                                    </svg>
+                                </button>
+                            </form>
+                            @endif
+                        </div>
+
+                        @if($pub->imagenes->count())
+                        <img src="{{ asset('storage/' . $pub->imagenes->first()->imagen) }}"
+                            style="width:100%;max-height:300px;object-fit:cover;">
+                        @endif
+
+                        <div class="post-body">
+                            <p class="post-text">{{ $pub->contenido }}</p>
+                        </div>
+
+                        <div class="post-footer">
+                            <button class="post-action" onclick="likePost(this)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                </svg>
+                                <span>0</span>
+                            </button>
+                            <button class="post-action" onclick="toggleComment(this,'c{{ $pub->id_publicacion }}')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                </svg>
+                                <span>0</span>
+                            </button>
+                        </div>
+
+                        <div class="comment-box" id="c{{ $pub->id_publicacion }}"
+                            style="display:none;padding:12px 16px;border-top:1px solid var(--border2);">
+                            <div style="display:flex;gap:8px;">
+                                <div class="li-avatar" style="flex-shrink:0;">
+                                    {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+                                </div>
+                                <div class="field-box" style="flex:1;height:38px;">
+                                    <input type="text" placeholder="Escribe un comentario..." style="font-size:13px;">
+                                </div>
+                                <button class="btn-violet" style="height:38px;padding:0 14px;font-size:12px;"
+                                    onclick="addComment(this)">Enviar</button>
                             </div>
                         </div>
+                    </div>
                     @empty
-                        <div style="text-align:center;padding:40px;color:var(--muted2);">
-                            No hay publicaciones aún. ¡Sé el primero en publicar!
-                        </div>
+                    <div style="text-align:center;padding:40px;color:var(--muted2);">
+                        No hay publicaciones aún. ¡Sé el primero en publicar!
+                    </div>
                     @endforelse
                 </div>
             </div>
@@ -1299,4 +1366,4 @@
     <script src="/BladeBarber/public/js/cliente-dash.js"></script>
 </body>
 
-</html> 
+</html>

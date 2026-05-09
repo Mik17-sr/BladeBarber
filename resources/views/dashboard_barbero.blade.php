@@ -123,13 +123,41 @@
       <button class="nav-item" onclick="showPanel('atender')">
         Atender Citas
       </button>
+      <button class="nav-item" onclick="showPanel('fila-barbero')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6" />
+          <line x1="8" y1="12" x2="21" y2="12" />
+          <line x1="8" y1="18" x2="21" y2="18" />
+          <line x1="3" y1="6" x2="3.01" y2="6" />
+          <line x1="3" y1="12" x2="3.01" y2="12" />
+          <line x1="3" y1="18" x2="3.01" y2="18" />
+        </svg>
+        Fila de Espera
+        <span class="nav-badge nav-badge--pulse">
+            {{ $filaCount ?? 0 }}
+        </span>
+      </button>
+      <div class="nav-label">Servicios</div>
+
+      <button class="nav-item" onclick="showPanel('service-register')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 7L10 17l-5-5" />
+        </svg>
+        Registrar Servicio
+      </button>
+      <button class="nav-item" onclick="showPanel('services-list')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        Ver Servicios
+      </button>
     </nav>
     <div class="sidebar-foot">
       <div class="avatar-sm">@if(auth()->user()->foto)
         <img src="{{ asset('storage/' . auth()->user()->foto) }}"
           style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-      @else
-          {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+        @else
+        {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
         @endif
       </div>
       <div class="foot-info">
@@ -208,24 +236,24 @@
             <div class="card-hd"><span class="card-hd-title">Mis Próximas Citas</span></div>
             <div class="card-body">
               @forelse($citasHoy->take(3) as $cita)
-                <div class="list-item">
-                  <div class="li-avatar">
-                    {{ strtoupper(substr($cita->cliente->nombre ?? '?', 0, 1)) }}
-                  </div>
-                  <div class="li-info">
-                    <div class="li-name">{{ $cita->cliente->nombre ?? 'Cliente' }}</div>
-                    <div class="li-sub">
-                      {{ $cita->servicios->pluck('nombre')->join(', ') ?: '—' }}
-                    </div>
-                  </div>
-                  <span class="badge badge--gold">
-                    {{ \Carbon\Carbon::parse($cita->hora_cita)->format('H:i') }}
-                  </span>
+              <div class="list-item">
+                <div class="li-avatar">
+                  {{ strtoupper(substr($cita->cliente->nombre ?? '?', 0, 1)) }}
                 </div>
+                <div class="li-info">
+                  <div class="li-name">{{ $cita->cliente->nombre ?? 'Cliente' }}</div>
+                  <div class="li-sub">
+                    {{ $cita->servicios->pluck('nombre')->join(', ') ?: '—' }}
+                  </div>
+                </div>
+                <span class="badge badge--gold">
+                  {{ \Carbon\Carbon::parse($cita->hora_cita)->format('H:i') }}
+                </span>
+              </div>
               @empty
-                <div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">
-                  No tienes citas para hoy.
-                </div>
+              <div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">
+                No tienes citas para hoy.
+              </div>
               @endforelse
             </div>
           </div>
@@ -301,10 +329,10 @@
         <div class="profile-hero" style="margin-bottom:24px;">
           <div class="avatar-lg" onclick="document.getElementById('avatarInput').click()">
             @if(auth()->user()->foto)
-              <img src="{{ asset('storage/' . auth()->user()->foto) }}"
-                style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+            <img src="{{ asset('storage/' . auth()->user()->foto) }}"
+              style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
             @else
-              {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
+            {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
             @endif
             <div class="avatar-overlay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
@@ -434,55 +462,55 @@
         </div>
         <div class="posts-list">
           @forelse($posts ?? [] as $post)
-            <div class="post-card">
-              <div class="post-head">
-                <div class="li-avatar">{{ substr($post->user->nombre, 0, 1) }}</div>
-                <div class="post-meta">
-                  <div class="post-author">{{ $post->user->nombre }}</div>
-                  <div class="post-time">{{ $post->created_at->diffForHumans() }}</div>
-                </div>
-                @if($post->user_id === auth()->id())
-                  <form action="{{ route('barber.posts.destroy', $post->id) }}" method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <button class="post-del" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6l-1 14H6L5 6" />
-                        <path d="M10 11v6M14 11v6" />
-                      </svg></button>
-                  </form>
-                @endif
+          <div class="post-card">
+            <div class="post-head">
+              <div class="li-avatar">{{ substr($post->user->nombre, 0, 1) }}</div>
+              <div class="post-meta">
+                <div class="post-author">{{ $post->user->nombre }}</div>
+                <div class="post-time">{{ $post->created_at->diffForHumans() }}</div>
               </div>
-              @if($post->image)<img src="{{ asset('storage/' . $post->image) }}" alt="" class="post-img">@endif
-              <div class="post-body">
-                <p class="post-text">{{ $post->content }}</p>
-              </div>
-              <div class="post-footer"><button class="post-action"><svg viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2">
-                    <path
-                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                  </svg>{{ $post->likes_count ?? 0 }}</button></div>
+              @if($post->user_id === auth()->id())
+              <form action="{{ route('barber.posts.destroy', $post->id) }}" method="POST">
+                @csrf
+                @method('DELETE')
+                <button class="post-del" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14H6L5 6" />
+                    <path d="M10 11v6M14 11v6" />
+                  </svg></button>
+              </form>
+              @endif
             </div>
+            @if($post->image)<img src="{{ asset('storage/' . $post->image) }}" alt="" class="post-img">@endif
+            <div class="post-body">
+              <p class="post-text">{{ $post->content }}</p>
+            </div>
+            <div class="post-footer"><button class="post-action"><svg viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2">
+                  <path
+                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>{{ $post->likes_count ?? 0 }}</button></div>
+          </div>
           @empty
-            <div class="post-card">
-              <div class="post-head">
-                <div class="li-avatar">A</div>
-                <div class="post-meta">
-                  <div class="post-author">Admin</div>
-                  <div class="post-time">hace 1 hora</div>
-                </div>
+          <div class="post-card">
+            <div class="post-head">
+              <div class="li-avatar">A</div>
+              <div class="post-meta">
+                <div class="post-author">Admin</div>
+                <div class="post-time">hace 1 hora</div>
               </div>
-              <div class="post-body">
-                <p class="post-text">¡Equipo, recuerden que hoy tenemos día de promociones! Corte + barba a precio
-                  especial. ✂️</p>
-              </div>
-              <div class="post-footer"><button class="post-action"><svg viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2">
-                    <path
-                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                  </svg>12</button></div>
             </div>
+            <div class="post-body">
+              <p class="post-text">¡Equipo, recuerden que hoy tenemos día de promociones! Corte + barba a precio
+                especial. ✂️</p>
+            </div>
+            <div class="post-footer"><button class="post-action"><svg viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2">
+                  <path
+                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>12</button></div>
+          </div>
           @endforelse
         </div>
       </div>
@@ -539,50 +567,50 @@
         </div>
         <div class="barbers-grid">
           @forelse($barbers ?? [] as $barber)
-            <div class="barber-card">
-              <div class="barber-card-top">
-                <div class="barber-avatar">@if($barber->avatar)<img src="{{ asset('storage/' . $barber->avatar) }}"
-                alt="">@else{{ substr($barber->nombre, 0, 1) }}@endif</div>
-                <div>
-                  <div class="barber-name">{{ $barber->nombre }}</div>
-                  <div class="barber-spec">{{ $barber->specialty ?? 'Barbero' }}</div><span
-                    class="badge {{ $barber->active ? 'badge--green' : 'badge--red' }}">{{ $barber->active ? 'Activo' : 'Inactivo' }}</span>
-                </div>
-              </div>
-              <div class="barber-stats">
-                <div class="barber-stat">
-                  <div class="barber-stat-val">{{ $barber->appointments_count ?? 0 }}</div>
-                  <div class="barber-stat-lbl">Citas</div>
-                </div>
-                <div class="barber-stat">
-                  <div class="barber-stat-val">{{ $barber->rating ?? '5.0' }}</div>
-                  <div class="barber-stat-lbl">Rating</div>
-                </div>
+          <div class="barber-card">
+            <div class="barber-card-top">
+              <div class="barber-avatar">@if($barber->avatar)<img src="{{ asset('storage/' . $barber->avatar) }}"
+                  alt="">@else{{ substr($barber->nombre, 0, 1) }}@endif</div>
+              <div>
+                <div class="barber-name">{{ $barber->nombre }}</div>
+                <div class="barber-spec">{{ $barber->specialty ?? 'Barbero' }}</div><span
+                  class="badge {{ $barber->active ? 'badge--green' : 'badge--red' }}">{{ $barber->active ? 'Activo' : 'Inactivo' }}</span>
               </div>
             </div>
-          @empty
-            @foreach([['Pedro G.', 'Fade & Barba', true, 28, '4.9'], ['Luis M.', 'Clásico', true, 15, '4.7'], ['Andrés C.', 'Diseño', false, 5, '4.5'], ['Camilo R.', 'Moderno', true, 32, '5.0']] as $b)
-              <div class="barber-card">
-                <div class="barber-card-top">
-                  <div class="barber-avatar">{{ substr($b[0], 0, 1) }}</div>
-                  <div>
-                    <div class="barber-name">{{ $b[0] }}</div>
-                    <div class="barber-spec">{{ $b[1] }}</div><span
-                      class="badge {{ $b[2] ? 'badge--green' : 'badge--red' }}">{{ $b[2] ? 'Activo' : 'Inactivo' }}</span>
-                  </div>
-                </div>
-                <div class="barber-stats">
-                  <div class="barber-stat">
-                    <div class="barber-stat-val">{{ $b[3] }}</div>
-                    <div class="barber-stat-lbl">Citas</div>
-                  </div>
-                  <div class="barber-stat">
-                    <div class="barber-stat-val">{{ $b[4] }}</div>
-                    <div class="barber-stat-lbl">Rating</div>
-                  </div>
-                </div>
+            <div class="barber-stats">
+              <div class="barber-stat">
+                <div class="barber-stat-val">{{ $barber->appointments_count ?? 0 }}</div>
+                <div class="barber-stat-lbl">Citas</div>
               </div>
-            @endforeach
+              <div class="barber-stat">
+                <div class="barber-stat-val">{{ $barber->rating ?? '5.0' }}</div>
+                <div class="barber-stat-lbl">Rating</div>
+              </div>
+            </div>
+          </div>
+          @empty
+          @foreach([['Pedro G.', 'Fade & Barba', true, 28, '4.9'], ['Luis M.', 'Clásico', true, 15, '4.7'], ['Andrés C.', 'Diseño', false, 5, '4.5'], ['Camilo R.', 'Moderno', true, 32, '5.0']] as $b)
+          <div class="barber-card">
+            <div class="barber-card-top">
+              <div class="barber-avatar">{{ substr($b[0], 0, 1) }}</div>
+              <div>
+                <div class="barber-name">{{ $b[0] }}</div>
+                <div class="barber-spec">{{ $b[1] }}</div><span
+                  class="badge {{ $b[2] ? 'badge--green' : 'badge--red' }}">{{ $b[2] ? 'Activo' : 'Inactivo' }}</span>
+              </div>
+            </div>
+            <div class="barber-stats">
+              <div class="barber-stat">
+                <div class="barber-stat-val">{{ $b[3] }}</div>
+                <div class="barber-stat-lbl">Citas</div>
+              </div>
+              <div class="barber-stat">
+                <div class="barber-stat-val">{{ $b[4] }}</div>
+                <div class="barber-stat-lbl">Rating</div>
+              </div>
+            </div>
+          </div>
+          @endforeach
           @endforelse
         </div>
       </div>
@@ -639,43 +667,43 @@
         {{-- Grid semanal --}}
         <div class="schedule-grid">
           @php
-            $diasSemana = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+          $diasSemana = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
           @endphp
 
           @foreach($diasSemana as $i => $nombreDia)
-            @php
-              $fecha = $inicioSemana->copy()->addDays($i);
-              $fechaKey = $fecha->toDateString();
-              $esHoy = $fecha->isToday();
-              $citasDia = $citasSemana[$fechaKey] ?? collect();
-            @endphp
+          @php
+          $fecha = $inicioSemana->copy()->addDays($i);
+          $fechaKey = $fecha->toDateString();
+          $esHoy = $fecha->isToday();
+          $citasDia = $citasSemana[$fechaKey] ?? collect();
+          @endphp
 
-            <div class="day-col {{ $esHoy ? 'today' : '' }}">
-              <div class="day-hd">
-                <div class="day-name">{{ $nombreDia }}</div>
-                <div class="day-num">{{ $fecha->day }}</div>
-              </div>
-
-              @forelse($citasDia as $cita)
-                @php
-                  $badgeClass = match (strtolower($cita->estado)) {
-                    'confirmada' => 'slot--booked',
-                    'cancelada' => 'slot--cancel',
-                    default => 'slot--pending',
-                  };
-                @endphp
-                <div class="slot {{ $badgeClass }}" title="{{ $cita->cliente->nombre ?? '' }} — {{ $cita->estado }}">
-                  <div class="slot-time">
-                    {{ \Carbon\Carbon::parse($cita->hora_cita)->format('H:i') }}
-                  </div>
-                  <div class="slot-name">
-                    {{ \Illuminate\Support\Str::words($cita->cliente->nombre ?? '?', 1, '') }}
-                  </div>
-                </div>
-              @empty
-                {{-- Día sin citas: no muestra nada (columna vacía) --}}
-              @endforelse
+          <div class="day-col {{ $esHoy ? 'today' : '' }}">
+            <div class="day-hd">
+              <div class="day-name">{{ $nombreDia }}</div>
+              <div class="day-num">{{ $fecha->day }}</div>
             </div>
+
+            @forelse($citasDia as $cita)
+            @php
+            $badgeClass = match (strtolower($cita->estado)) {
+            'confirmada' => 'slot--booked',
+            'cancelada' => 'slot--cancel',
+            default => 'slot--pending',
+            };
+            @endphp
+            <div class="slot {{ $badgeClass }}" title="{{ $cita->cliente->nombre ?? '' }} — {{ $cita->estado }}">
+              <div class="slot-time">
+                {{ \Carbon\Carbon::parse($cita->hora_cita)->format('H:i') }}
+              </div>
+              <div class="slot-name">
+                {{ \Illuminate\Support\Str::words($cita->cliente->nombre ?? '?', 1, '') }}
+              </div>
+            </div>
+            @empty
+            {{-- Día sin citas: no muestra nada (columna vacía) --}}
+            @endforelse
+          </div>
           @endforeach
         </div>
 
@@ -686,75 +714,75 @@
         </div>
 
         @if(session('success'))
-          <div style="background:rgba(80,200,120,0.1);border:1px solid var(--green);
+        <div style="background:rgba(80,200,120,0.1);border:1px solid var(--green);
                               border-radius:8px;padding:10px 14px;font-size:13px;
                               color:var(--green);margin-bottom:14px;">
-            {{ session('success') }}
-          </div>
+          {{ session('success') }}
+        </div>
         @endif
 
         <div class="appt-list">
           @forelse($citasDelDia as $cita)
-            <div class="appt-item">
+          <div class="appt-item">
 
-              {{-- Hora --}}
-              <div class="appt-time">
-                {{ \Carbon\Carbon::parse($cita->hora_cita)->format('H:i') }}
+            {{-- Hora --}}
+            <div class="appt-time">
+              {{ \Carbon\Carbon::parse($cita->hora_cita)->format('H:i') }}
+            </div>
+
+            {{-- Cliente + servicios --}}
+            <div class="appt-info">
+              <div class="appt-client">{{ $cita->cliente->nombre ?? 'Cliente' }}</div>
+              <div class="appt-service">
+                {{ $cita->servicios->pluck('nombre')->join(', ') ?: '—' }}
               </div>
+            </div>
 
-              {{-- Cliente + servicios --}}
-              <div class="appt-info">
-                <div class="appt-client">{{ $cita->cliente->nombre ?? 'Cliente' }}</div>
-                <div class="appt-service">
-                  {{ $cita->servicios->pluck('nombre')->join(', ') ?: '—' }}
-                </div>
-              </div>
+            {{-- Estado badge --}}
+            <div class="appt-dur" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+              @php
+              $estadoClass = match (strtolower($cita->estado)) {
+              'confirmada' => 'badge--green',
+              'cancelada' => 'badge--red',
+              default => 'badge--gold', // pendiente
+              };
+              @endphp
+              <span class="badge {{ $estadoClass }}">{{ ucfirst($cita->estado) }}</span>
 
-              {{-- Estado badge --}}
-              <div class="appt-dur" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-                @php
-                  $estadoClass = match (strtolower($cita->estado)) {
-                    'confirmada' => 'badge--green',
-                    'cancelada' => 'badge--red',
-                    default => 'badge--gold',   // pendiente
-                  };
-                @endphp
-                <span class="badge {{ $estadoClass }}">{{ ucfirst($cita->estado) }}</span>
+              {{-- Acciones --}}
+              @if(strtolower($cita->estado) !== 'cancelada')
+              <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
 
-                {{-- Acciones --}}
-                @if(strtolower($cita->estado) !== 'cancelada')
-                  <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
-
-                    {{-- Confirmar --}}
-                    @if(strtolower($cita->estado) === 'pendiente')
-                      <form method="POST" action="{{ route('barber.citas.estado', $cita->id_cita) }}">
-                        @csrf @method('PATCH')
-                        <input type="hidden" name="estado" value="Confirmada">
-                        <button type="submit" class="btn-gold" style="height:28px;padding:0 10px;font-size:11px;">
-                          Confirmar
-                        </button>
-                      </form>
-                    @endif
-
-                    {{-- Cancelar --}}
-                    <form method="POST" action="{{ route('barber.citas.cancelar', $cita->id_cita) }}"
-                      onsubmit="return confirm('¿Cancelar esta cita?')">
-                      @csrf @method('DELETE')
-                      <button type="submit" class="btn-outline" style="height:28px;padding:0 10px;font-size:11px;
-                                                           border-color:var(--red,#e55);color:var(--red,#e55);">
-                        Cancelar
-                      </button>
-                    </form>
-
-                  </div>
+                {{-- Confirmar --}}
+                @if(strtolower($cita->estado) === 'pendiente')
+                <form method="POST" action="{{ route('barber.citas.estado', $cita->id_cita) }}">
+                  @csrf @method('PATCH')
+                  <input type="hidden" name="estado" value="Confirmada">
+                  <button type="submit" class="btn-gold" style="height:28px;padding:0 10px;font-size:11px;">
+                    Confirmar
+                  </button>
+                </form>
                 @endif
-              </div>
 
+                {{-- Cancelar --}}
+                <form method="POST" action="{{ route('barber.citas.cancelar', $cita->id_cita) }}"
+                  onsubmit="return confirm('¿Cancelar esta cita?')">
+                  @csrf @method('DELETE')
+                  <button type="submit" class="btn-outline" style="height:28px;padding:0 10px;font-size:11px;
+                                                           border-color:var(--red,#e55);color:var(--red,#e55);">
+                    Cancelar
+                  </button>
+                </form>
+
+              </div>
+              @endif
             </div>
+
+          </div>
           @empty
-            <div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">
-              No hay citas para este día.
-            </div>
+          <div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">
+            No hay citas para este día.
+          </div>
           @endforelse
         </div>
 
@@ -770,16 +798,16 @@
           <div class="card-hd-title">Horario Asignado por el Admin</div>
           <div class="hours-grid">
             @foreach(['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] as $day)
-              <div class="hour-day">
-                <div class="hour-label">{{ $day }}</div>
-                <div
-                  style="background:var(--surface3);border-radius:8px;padding:6px;text-align:center;font-size:11px;color:var(--gold);">
-                  08:00</div>
-                <div
-                  style="background:var(--surface3);border-radius:8px;padding:6px;text-align:center;font-size:11px;color:var(--muted2);">
-                  18:00</div>
-                <div style="font-size:10px;color:var(--green);text-align:center;margin-top:2px;">✓ Activo</div>
-              </div>
+            <div class="hour-day">
+              <div class="hour-label">{{ $day }}</div>
+              <div
+                style="background:var(--surface3);border-radius:8px;padding:6px;text-align:center;font-size:11px;color:var(--gold);">
+                08:00</div>
+              <div
+                style="background:var(--surface3);border-radius:8px;padding:6px;text-align:center;font-size:11px;color:var(--muted2);">
+                18:00</div>
+              <div style="font-size:10px;color:var(--green);text-align:center;margin-top:2px;">✓ Activo</div>
+            </div>
             @endforeach
           </div>
           <div
@@ -807,13 +835,13 @@
             </div>
             <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px;">
               @foreach([['Lunes – Viernes', '8:00 AM – 8:00 PM'], ['Sábado', '9:00 AM – 6:00 PM'], ['Domingo', 'Cerrado']] as $h)
-                <div class="list-item">
-                  <div class="li-info">
-                    <div class="li-name">{{ $h[0] }}</div>
-                    <div class="li-sub">{{ $h[1] }}</div>
-                  </div>@if($h[1] == 'Cerrado')<span class="badge badge--red">Cerrado</span>@else<span
+              <div class="list-item">
+                <div class="li-info">
+                  <div class="li-name">{{ $h[0] }}</div>
+                  <div class="li-sub">{{ $h[1] }}</div>
+                </div>@if($h[1] == 'Cerrado')<span class="badge badge--red">Cerrado</span>@else<span
                   class="badge badge--green">Abierto</span>@endif
-                </div>
+              </div>
               @endforeach
             </div>
             <div
@@ -833,55 +861,295 @@
         </div>
 
         <div class="appt-list">
-          @forelse($citasHoy as $cita)
-            @php
-              $total = $cita->servicios->sum('precio');
-            @endphp
+          @forelse($citasSinAtender as $cita)
+          @php
+          $total = $cita->servicios->sum('precio');
+          @endphp
 
-            <div class="appt-item">
+          <div class="appt-item">
 
-              <div class="appt-time">
-                {{ \Carbon\Carbon::parse($cita->hora_cita)->format('H:i') }}
+            <div class="appt-time">
+              {{ \Carbon\Carbon::parse($cita->hora_cita)->format('H:i') }}
+            </div>
+
+            <div class="appt-info">
+              <div class="appt-client">{{ $cita->cliente->nombre }}</div>
+              <div class="appt-service">
+                {{ $cita->servicios->pluck('nombre')->join(', ') }}
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+
+              <div style="font-weight:bold;color:var(--gold);">
+                ${{ number_format($total, 0) }}
               </div>
 
-              <div class="appt-info">
-                <div class="appt-client">{{ $cita->cliente->nombre }}</div>
-                <div class="appt-service">
-                  {{ $cita->servicios->pluck('nombre')->join(', ') }}
-                </div>
+              <form method="POST" action="{{ route('barber.atender.completar', $cita->id_cita) }}">
+                @csrf
+
+                <select name="metodo" style="margin-bottom:6px;">
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="Tarjeta">Tarjeta</option>
+                  <option value="Transferencia">Transferencia</option>
+                </select>
+
+                <button type="submit" class="btn-gold" style="height:30px;font-size:12px;">
+                  Atender y cobrar
+                </button>
+              </form>
+
+            </div>
+
+          </div>
+
+          @empty
+          <div style="text-align:center;padding:30px;color:var(--muted);">
+            No hay citas para atender
+          </div>
+          @endforelse
+        </div>
+
+      </div>
+      <div class="panel" id="panel-fila-barbero">
+        <div style="margin-bottom:20px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">
+            Fila de Espera
+          </div>
+          <div style="font-size:13px;color:var(--muted2);">
+            Gestiona los turnos y registra la atención
+          </div>
+        </div>
+
+        @if(session('success'))
+        <div style="background:rgba(80,200,120,0.1);border:1px solid var(--green);
+                border-radius:8px;padding:10px 14px;font-size:13px;
+                color:var(--green);margin-bottom:14px;">
+          {{ session('success') }}
+        </div>
+        @endif
+
+        @php
+        $filaActiva = \App\Models\ConfiguracionFila::vigente();
+        $turnos = \App\Models\FilaEspera::with(['cliente.usuario','servicios'])
+        ->whereIn('estado',['esperando','asignado','en_atencion'])
+        ->orderBy('posicion')->get();
+        @endphp
+
+        @if(!$filaActiva)
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+                border-radius:12px;padding:24px;text-align:center;color:var(--muted2);margin-bottom:20px;">
+          La fila de espera no está activa en este momento.
+        </div>
+        @endif
+
+        <div class="appt-list">
+          @forelse($turnos as $turno)
+          @php $total = $turno->servicios->sum('precio'); @endphp
+
+          <div class="appt-item">
+
+            {{-- Posición --}}
+            <div class="appt-time" style="font-family:'Bebas Neue';font-size:24px;color:var(--gold);min-width:36px;">
+              #{{ $turno->posicion }}
+            </div>
+
+            {{-- Info cliente --}}
+            <div class="appt-info">
+              <div class="appt-client">{{ $turno->cliente->usuario->nombre ?? '—' }}</div>
+              <div class="appt-service">
+                {{ $turno->servicios->pluck('nombre')->join(', ') }}
+              </div>
+              <div style="font-size:11px;color:var(--muted2);margin-top:2px;">
+                Esperando desde {{ $turno->created_at->format('H:i') }}
+              </div>
+            </div>
+
+            {{-- Acciones según estado --}}
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+
+              <span class="badge {{ match($turno->estado) {
+                    'en_atencion' => 'badge--green',
+                    'asignado'    => 'badge-gold',
+                    default       => 'badge--gold'
+                } }}">{{ ucfirst(str_replace('_',' ',$turno->estado)) }}</span>
+
+              <div style="font-size:12px;color:var(--gold);">
+                ${{ number_format($total, 0, ',', '.') }}
               </div>
 
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
 
-                <div style="font-weight:bold;color:var(--gold);">
-                  ${{ number_format($total, 0) }}
-                </div>
-
-                <form method="POST" action="{{ route('barber.atender.completar', $cita->id_cita) }}">
+                {{-- Iniciar atención --}}
+                @if(in_array($turno->estado, ['esperando','asignado']))
+                <form method="POST" action="{{ route('barber.fila.iniciar', $turno->id_turno) }}">
                   @csrf
+                  <button type="submit" class="btn-gold" style="height:30px;padding:0 12px;font-size:12px;">
+                    Iniciar
+                  </button>
+                </form>
+                @endif
 
-                  <select name="metodo" style="margin-bottom:6px;">
+                {{-- Finalizar + pago --}}
+                @if($turno->estado === 'en_atencion')
+                <form method="POST" action="{{ route('barber.fila.finalizar', $turno->id_turno) }}"
+                  style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                  @csrf
+                  <select name="metodo_pago"
+                    style="height:30px;font-size:12px;background:var(--surface3);
+                                   border:1px solid var(--border2);border-radius:8px;
+                                   color:var(--text);padding:0 8px;">
                     <option value="Efectivo">Efectivo</option>
                     <option value="Tarjeta">Tarjeta</option>
                     <option value="Transferencia">Transferencia</option>
                   </select>
-
-                  <button type="submit" class="btn-gold" style="height:30px;font-size:12px;">
-                    Atender y cobrar
+                  <button type="submit" class="btn-gold" style="height:30px;padding:0 12px;font-size:12px;">
+                    Finalizar y cobrar
                   </button>
                 </form>
+                @endif
+
+                {{-- Cancelar (no se presentó) --}}
+                @if($turno->estado !== 'en_atencion')
+                <form method="POST" action="{{ route('barber.fila.cancelar', $turno->id_turno) }}"
+                  onsubmit="return confirm('¿Marcar como no presentado?')">
+                  @csrf
+                  <button type="submit" class="btn-outline"
+                    style="height:30px;padding:0 10px;font-size:11px;
+                                   border-color:rgba(239,68,68,.4);color:#f87171;">
+                    No se presentó
+                  </button>
+                </form>
+                @endif
+
+              </div>
+            </div>
+          </div>
+          @empty
+          <div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">
+            La fila está vacía en este momento.
+          </div>
+          @endforelse
+        </div>
+      </div>
+      <div class="panel" id="panel-services-list">
+
+        <div style="margin-bottom:20px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">
+            Servicios de la Barbería
+          </div>
+          <div style="font-size:13px;color:var(--muted2);">
+            Lista de servicios disponibles
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body" style="padding:24px;">
+            @forelse($servicios ?? [] as $servicio)
+            <div class="list-item" style="align-items:flex-start; gap:14px;">
+              <div class="li-avatar">
+                {{ substr($servicio->nombre, 0, 1) }}
+              </div>
+              <div class="li-info" style="flex:1;">
+                <div class="li-name">
+                  {{ $servicio->nombre }}
+                </div>
+                <div class="li-sub">
+                  {{ $servicio->descripcion }}
+                </div>
+                <div style="margin-top:6px; font-size:12px; color:var(--muted2); display:flex; gap:10px;">
+                  <span>{{ $servicio->duracion }} min</span>
+                  <span>${{ number_format($servicio->precio, 0, ',', '.') }}</span>
+                </div>
+              </div>
+              {{-- acciones --}}
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <button class="btn-outline" style="padding:6px 10px;font-size:12px;">
+                  Editar
+                </button>
+                <form action="{{ route('admin.services.destroy', $servicio->id_servicio) }}" method="POST">
+                  @csrf
+                  @method('DELETE')
+                  <button class="btn-outline" style="padding:6px 10px;font-size:12px;color:#ff5c5c;">
+                    Eliminar
+                  </button>
+                </form>
+              </div>
+            </div>
+            <hr style="opacity:.1;margin:12px 0;">
+            @empty
+            <div style="text-align:center;color:var(--muted2);padding:20px;">
+              No hay servicios registrados aún
+            </div>
+            @endforelse
+          </div>
+        </div>
+      </div>
+      <div class="panel" id="panel-service-register">
+        <div style="margin-bottom:20px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">
+            Registrar Servicio
+          </div>
+          <div style="font-size:13px;color:var(--muted2);">
+            Crea un nuevo servicio para la barbería
+          </div>
+        </div>
+
+        <div class="card" style="max-width:600px;">
+          <div class="card-body" style="padding:24px;">
+
+            <form action="{{ route('barber.services.store') }}" method="POST">
+              @csrf
+
+              <div class="form-grid" style="gap:16px;">
+
+                {{-- Nombre --}}
+                <div class="field-wrap">
+                  <label class="field-lbl">Nombre del Servicio</label>
+                  <div class="field-box">
+                    <input type="text" name="nombre" placeholder="Ej: Corte + Barba" required>
+                  </div>
+                </div>
+
+                {{-- Precio --}}
+                <div class="field-wrap">
+                  <label class="field-lbl">Precio</label>
+                  <div class="field-box">
+                    <input type="number" name="precio" placeholder="Ej: 25000" required>
+                  </div>
+                </div>
+
+                {{-- Duración --}}
+                <div class="field-wrap">
+                  <label class="field-lbl">Duración (minutos)</label>
+                  <div class="field-box">
+                    <input type="number" name="duracion" placeholder="Ej: 45" required>
+                  </div>
+                </div>
+
+                {{-- Descripción --}}
+                <div class="field-wrap form-full">
+                  <label class="field-lbl">Descripción</label>
+                  <textarea class="field-ta" name="descripcion" placeholder="Detalles del servicio..."></textarea>
+                </div>
 
               </div>
 
-            </div>
+              <div class="form-actions" style="margin-top:20px;">
+                <button type="submit" class="btn-gold">
+                  Guardar Servicio
+                </button>
 
-          @empty
-            <div style="text-align:center;padding:30px;color:var(--muted);">
-              No hay citas para atender
-            </div>
-          @endforelse
+                <button type="button" class="btn-outline"
+                  onclick="showPanel('welcome')">
+                  Cancelar
+                </button>
+              </div>
+
+            </form>
+
+          </div>
         </div>
-
       </div>
 
     </div>

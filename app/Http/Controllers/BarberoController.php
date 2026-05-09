@@ -6,6 +6,7 @@ use App\Models\Barbero;
 use App\Models\Pago;
 use App\Models\Usuario;
 use App\Models\Cita;
+use App\Models\Servicio;
 use App\Validations\Validacion;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -49,7 +50,6 @@ class BarberoController extends Controller
                     'id_usuario' => $usuario->id_usuario,
                 ]);
             });
-
         } catch (\Exception $e) {
             return back()
                 ->withErrors(['general' => 'Error al registrar el barbero: ' . $e->getMessage()], 'barberoForm')
@@ -78,13 +78,16 @@ class BarberoController extends Controller
             ->get();
 
         $citasDelDia = $citasHoy;
+        $servicios = Servicio::all();
+
+        $citasSinAtender = $citasHoy->where('estado', 'Confirmada');
 
         $citasSemana = Cita::with(['cliente', 'servicios'])
             ->where('id_barbero', $idBarbero)
             ->whereBetween('fecha_cita', [
-                $inicioSemana->toDateString(),
-                $finSemana->toDateString(),
-            ])
+    $inicioSemana->toDateString(),
+    $finSemana->toDateString(),
+])
             ->orderBy('hora_cita')
             ->get()
             ->groupBy(fn($c) => Carbon::parse($c->fecha_cita)->toDateString());
@@ -95,10 +98,12 @@ class BarberoController extends Controller
             'citasHoy',
             'citasDelDia',
             'citasSemana',
+            'citasSinAtender',
             'inicioSemana',
             'finSemana',
             'fechaFiltro',
-            'totalCitasHoy'
+            'totalCitasHoy',
+            'servicios',
         ));
     }
 
@@ -137,29 +142,37 @@ class BarberoController extends Controller
         $finSemana = $inicioSemana->copy()->endOfWeek(Carbon::SUNDAY);
 
         $citasSemana = Cita::where('id_barbero', $this->barberoId())
-            ->whereBetween('hora_cita', [$inicioSemana, $finSemana])
+            ->whereBetween('fecha_cita', [
+                    $inicioSemana->toDateString(),
+                    $finSemana->toDateString(),
+                ])
             ->whereIn('estado', ['Pendiente', 'Confirmada'])
             ->with(['cliente', 'servicios'])
             ->get()
-            ->groupBy(fn($c) => Carbon::parse($c->hora_cita)->toDateString());
+            ->groupBy(fn($c) => Carbon::parse($c->fecha_cita)->toDateString());
 
         $fechaFiltro = $request->filled('fecha')
             ? Carbon::parse($request->fecha)
             : Carbon::today();
 
+
+
         $citasDelDia = Cita::where('id_barbero', $this->barberoId())
-            ->whereDate('hora_cita', $fechaFiltro)
+            ->whereDate('fecha_cita', $fechaFiltro)
             ->whereIn('estado', ['Pendiente', 'Confirmada'])
             ->orderBy('hora_cita')
             ->with(['cliente', 'servicios'])
             ->get();
 
         $citasHoy = $citasDelDia;
+
+        $citasSinAtender = $citasHoy->where('estado', 'Confirmada');
         $totalCitasHoy = $citasHoy->count();
 
         return view('dashboard_barbero', compact(
             'citasSemana',
             'citasHoy',
+            'citasSinAtender',
             'citasDelDia',
             'inicioSemana',
             'finSemana',
@@ -258,5 +271,22 @@ class BarberoController extends Controller
         $cita->save();
 
         return back()->with('success', 'Cita completada y pago registrado');
+    }
+    public function storeService(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:100',
+            'precio' => 'required|numeric|min:0',
+            'duracion' => 'required|integer|min:1',
+        ]);
+
+        Servicio::create([
+            'nombre' => $request->nombre,
+            'descripcion' => $request->descripcion,
+            'precio' => $request->precio,
+            'duracion' => $request->duracion,
+        ]);
+
+        return back()->with('success', 'Servicio creado correctamente.');
     }
 }
