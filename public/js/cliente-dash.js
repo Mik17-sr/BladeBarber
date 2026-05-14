@@ -467,3 +467,19 @@ function aplicarBloqueos() {
     });
 }
 
+function filtrarMuro(btn, filtro) {
+  // Marcar botón activo
+  document.querySelectorAll('#muroFiltros .filtro-btn')
+          .forEach(b => b.classList.remove('filtro-activo'));
+  btn.classList.add('filtro-activo');
+
+  // Mostrar/ocultar posts
+  document.querySelectorAll('#postsLista .post-card').forEach(card => {
+    const rol = card.dataset.rol; // 'admin', 'barbero-5', 'cliente'
+    if (filtro === 'todos' || rol === filtro) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}

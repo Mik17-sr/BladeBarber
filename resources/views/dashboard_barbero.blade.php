@@ -134,7 +134,7 @@
         </svg>
         Fila de Espera
         <span class="nav-badge nav-badge--pulse">
-            {{ $filaCount ?? 0 }}
+          {{ $filaCount ?? 0 }}
         </span>
       </button>
       <div class="nav-label">Servicios</div>
@@ -150,6 +150,25 @@
           <path d="M4 6h16M4 12h16M4 18h16" />
         </svg>
         Ver Servicios
+      </button>
+      <div class="nav-label">Control de Horas y Descansos</div>
+      <button class="nav-item" onclick="showPanel('almuerzo')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="3" width="7" height="7" rx="1" />
+          <rect x="3" y="14" width="7" height="7" rx="1" />
+          <rect x="14" y="14" width="7" height="7" rx="1" />
+        </svg>
+        Almuerzo
+      </button>
+      <button class="nav-item" onclick="showPanel('novedades')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="3" width="7" height="7" rx="1" />
+          <rect x="3" y="14" width="7" height="7" rx="1" />
+          <rect x="14" y="14" width="7" height="7" rx="1" />
+        </svg>
+        Novedades
       </button>
     </nav>
     <div class="sidebar-foot">
@@ -450,68 +469,121 @@
       <div class="panel" id="panel-posts-wall">
         <div style="margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">Muro</div>
-            <div style="font-size:13px;color:var(--muted2);">Publicaciones de la barbería</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">Muro de Publicaciones
+            </div>
+            <div style="font-size:13px;color:var(--muted2);">Últimas publicaciones de la barbería</div>
           </div>
-          <button class="btn-gold" onclick="showPanel('post-create')"><svg viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2">
+          <button class="btn-gold" onclick="showPanel('post-create')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="16" />
               <line x1="8" y1="12" x2="16" y2="12" />
-            </svg>Publicar</button>
+            </svg>
+            Publicar
+          </button>
         </div>
         <div class="posts-list">
           @forelse($posts ?? [] as $post)
           <div class="post-card">
             <div class="post-head">
-              <div class="li-avatar">{{ substr($post->user->nombre, 0, 1) }}</div>
-              <div class="post-meta">
-                <div class="post-author">{{ $post->user->nombre }}</div>
-                <div class="post-time">{{ $post->created_at->diffForHumans() }}</div>
+              <div class="li-avatar">
+                {{ strtoupper(substr($post->muro->usuario->nombre ?? 'A', 0, 1)) }}
               </div>
-              @if($post->user_id === auth()->id())
-              <form action="{{ route('barber.posts.destroy', $post->id) }}" method="POST">
-                @csrf
-                @method('DELETE')
-                <button class="post-del" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
-                    <polyline points="3 6 5 6 21 6" />
-                    <path d="M19 6l-1 14H6L5 6" />
-                    <path d="M10 11v6M14 11v6" />
-                  </svg></button>
-              </form>
-              @endif
+              <div class="post-meta">
+                <div class="post-author">{{ $post->muro->usuario->nombre ?? 'Admin' }}</div>
+                <div class="post-time">{{ \Carbon\Carbon::parse($post->fecha)->diffForHumans() }}</div>
+              </div>
+
+              {{-- Botones editar y eliminar --}}
+              <div style="display:flex;gap:8px;margin-left:auto;">
+                @php
+                $miMuro = auth()->user()->muro?->id_muro;
+                @endphp
+                @if($post->id_muro === $miMuro)
+
+                {{-- Editar --}}
+                <button type="button" title="Editar"
+                  onclick='abrirEditar({{ $post->id_publicacion }}, @json($post->contenido))'
+                  style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+               border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--gold);
+               display:flex;align-items:center;gap:6px;font-size:12px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Editar
+                </button>
+
+                {{-- Eliminar --}}
+                <form action="{{ route('posts.destroy', $post->id_publicacion) }}" method="POST">
+                  @csrf @method('DELETE')
+                  <button class="post-del" type="submit" title="Eliminar"
+                    onclick="return confirm('¿Eliminar esta publicación?')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v6M14 11v6" />
+                      <path d="M9 6V4h6v2" />
+                    </svg>
+                  </button>
+                </form>
+
+                @endif
+              </div>
             </div>
-            @if($post->image)<img src="{{ asset('storage/' . $post->image) }}" alt="" class="post-img">@endif
+
+            {{-- Imágenes de la publicación --}}
+            @foreach($post->imagenes as $img)
+            <img src="{{ asset('storage/' . $img->imagen) }}" alt="Imagen" class="post-img">
+            @endforeach
+
             <div class="post-body">
-              <p class="post-text">{{ $post->content }}</p>
+              <p class="post-text">{{ $post->contenido }}</p>
             </div>
-            <div class="post-footer"><button class="post-action"><svg viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2">
+
+            <div class="post-footer">
+              <button class="post-action">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path
                     d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                </svg>{{ $post->likes_count ?? 0 }}</button></div>
+                </svg> 0
+              </button>
+              <button class="post-action">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg> 0
+              </button>
+            </div>
           </div>
           @empty
-          <div class="post-card">
-            <div class="post-head">
-              <div class="li-avatar">A</div>
-              <div class="post-meta">
-                <div class="post-author">Admin</div>
-                <div class="post-time">hace 1 hora</div>
-              </div>
-            </div>
-            <div class="post-body">
-              <p class="post-text">¡Equipo, recuerden que hoy tenemos día de promociones! Corte + barba a precio
-                especial. ✂️</p>
-            </div>
-            <div class="post-footer"><button class="post-action"><svg viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2">
-                  <path
-                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                </svg>12</button></div>
-          </div>
+
           @endforelse
+        </div>
+      </div>
+      <div id="modalEditar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
+              z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:var(--surface);border-radius:16px;padding:28px;
+                    width:100%;max-width:500px;margin:0 16px;
+                    border:1px solid rgba(255,255,255,.08);box-shadow:0 20px 60px rgba(0,0,0,.5);">
+
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;
+                        letter-spacing:2px;margin-bottom:16px;color:var(--gold);">
+            Editar Publicación
+          </div>
+
+          <form id="formEditar" method="POST">
+            @csrf
+            @method('PUT')
+            <div class="field-wrap" style="margin-bottom:16px;">
+              <label class="field-lbl">Contenido</label>
+              <textarea id="editContenido" name="contenido" class="field-ta"
+                style="min-height:120px;width:100%;"></textarea>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+              <button type="button" class="btn-outline" onclick="cerrarEditar()">Cancelar</button>
+              <button type="submit" class="btn-gold">Guardar</button>
+            </div>
+          </form>
         </div>
       </div>
 
@@ -522,7 +594,7 @@
         </div>
         <div class="card" style="max-width:600px;">
           <div class="card-body" style="padding:24px;">
-            <form action="{{ route('barber.posts.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data">
               @csrf
               <div style="display:flex;flex-direction:column;gap:16px;">
                 <div class="field-wrap"><label class="field-lbl">Contenido</label><textarea class="field-ta"
@@ -752,7 +824,17 @@
               {{-- Acciones --}}
               @if(strtolower($cita->estado) !== 'cancelada')
               <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
-
+                <button type="button"
+                  class="btn-outline"
+                  style="height:28px;padding:0 10px;font-size:11px;"
+                  onclick="abrirModalReprogramar(
+                    '{{ $cita->id_cita }}',
+                    '{{ addslashes($cita->cliente->nombre ?? 'Cliente') }}',
+                    '{{ \Carbon\Carbon::parse($cita->hora_cita)->format('Y-m-d\TH:i') }}',
+                    '{{ route('barber.citas.reprogramar', $cita->id_cita) }}'
+                  )">
+                  Reprogramar
+                </button>
                 {{-- Confirmar --}}
                 @if(strtolower($cita->estado) === 'pendiente')
                 <form method="POST" action="{{ route('barber.citas.estado', $cita->id_cita) }}">
@@ -1151,6 +1233,308 @@
           </div>
         </div>
       </div>
+      <div class="panel" id="panel-almuerzo">
+        <div style="margin-bottom:20px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">
+            Bloque de Almuerzo
+          </div>
+          <div style="font-size:13px;color:var(--muted2);">
+            Reserva tu hora de comida (12:00 – 14:00)
+          </div>
+        </div>
+        @if(session('success'))
+        <div style="background:rgba(80,200,120,0.1);border:1px solid var(--green);
+              border-radius:8px;padding:10px 14px;font-size:13px;
+              color:var(--green);margin-bottom:14px;">
+          {{ session('success') }}
+        </div>
+        @endif
+        @if(isset($bloqueHoy) && $bloqueHoy)
+        <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);
+              border-radius:12px;padding:16px 20px;margin-bottom:20px;
+              display:flex;align-items:center;gap:14px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" width="22" height="22">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <div>
+            <div style="font-size:13px;color:var(--gold);font-weight:500;">Almuerzo registrado hoy</div>
+            <div style="font-size:12px;color:var(--muted2);">
+              {{ $bloqueHoy->hora_inicio }} – {{ $bloqueHoy->hora_fin }}
+              @if($bloqueHoy->automatico)
+              <span style="margin-left:6px;background:rgba(201,168,76,0.15);
+                       color:var(--gold);font-size:10px;padding:2px 6px;border-radius:20px;">
+                Asignado automáticamente
+              </span>
+              @endif
+            </div>
+          </div>
+        </div>
+        @endif
+        <div class="card" style="max-width:480px;">
+          <div class="card-hd"><span class="card-hd-title">Seleccionar bloque</span></div>
+          <div class="card-body" style="padding:24px;">
+            <form action="{{ route('barber.almuerzo.store') }}" method="POST"
+              style="display:flex;flex-direction:column;gap:16px;">
+              @csrf
+              <div class="field-wrap">
+                <label class="field-lbl">Fecha</label>
+                <div class="field-box">
+                  <input type="date" name="fecha"
+                    value="{{ today()->toDateString() }}"
+                    min="{{ today()->toDateString() }}"
+                    required>
+                </div>
+              </div>
+
+              {{-- Selector visual de horario — Criterio 1 --}}
+              <div class="field-wrap">
+                <label class="field-lbl">Hora de almuerzo</label>
+                <div style="display:flex;gap:10px;margin-top:6px;">
+
+                  <label style="flex:1;cursor:pointer;">
+                    <input type="radio" name="hora_inicio" value="12:00" required
+                      style="display:none;" id="bloque12"
+                      onchange="marcarBloque(this)">
+                    <div class="bloque-option" id="opt-12"
+                      style="border:1px solid var(--border2);border-radius:10px;
+                       padding:14px;text-align:center;transition:all .2s;">
+                      <div style="font-family:'Bebas Neue';font-size:20px;letter-spacing:1px;">
+                        12:00
+                      </div>
+                      <div style="font-size:11px;color:var(--muted2);">hasta 13:00</div>
+                    </div>
+                  </label>
+
+                  <label style="flex:1;cursor:pointer;">
+                    <input type="radio" name="hora_inicio" value="13:00"
+                      style="display:none;" id="bloque13"
+                      onchange="marcarBloque(this)">
+                    <div class="bloque-option" id="opt-13"
+                      style="border:1px solid var(--border2);border-radius:10px;
+                       padding:14px;text-align:center;transition:all .2s;">
+                      <div style="font-family:'Bebas Neue';font-size:20px;letter-spacing:1px;">
+                        13:00
+                      </div>
+                      <div style="font-size:11px;color:var(--muted2);">hasta 14:00</div>
+                    </div>
+                  </label>
+
+                </div>
+                @error('hora_inicio')
+                <div style="font-size:11px;color:var(--red,#e55);margin-top:4px;">
+                  {{ $message }}
+                </div>
+                @enderror
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-gold">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" width="15" height="15">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Guardar bloque
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="panel" id="panel-novedades">
+        <div style="margin-bottom:20px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">
+            Novedades de Disponibilidad
+          </div>
+          <div style="font-size:13px;color:var(--muted2);">
+            Registra inasistencias o cancelaciones anticipadas
+          </div>
+        </div>
+
+        @if(session('success'))
+        <div style="background:rgba(80,200,120,0.1);border:1px solid var(--green);
+              border-radius:8px;padding:10px 14px;font-size:13px;
+              color:var(--green);margin-bottom:14px;">
+          {{ session('success') }}
+        </div>
+        @endif
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;flex-wrap:wrap;">
+          <div class="card" style="min-width:280px;">
+            <div class="card-hd"><span class="card-hd-title">Nueva novedad</span></div>
+            <div class="card-body" style="padding:24px;">
+              <form action="{{ route('barber.novedades.store') }}" method="POST"
+                style="display:flex;flex-direction:column;gap:14px;">
+                @csrf
+                <div class="field-wrap">
+                  <label class="field-lbl">Fecha afectada</label>
+                  <div class="field-box">
+                    <input type="date" name="fecha"
+                      value="{{ today()->toDateString() }}" required>
+                  </div>
+                </div>
+                <div class="field-wrap">
+                  <label class="field-lbl">Tipo de novedad</label>
+                  <div class="field-box">
+                    <select name="tipo" required onchange="toggleHoraAfectada(this.value)">
+                      <option value="">Seleccionar…</option>
+                      <option value="inasistencia">Inasistencia (día completo)</option>
+                      <option value="cancelacion_anticipada">Cancelación anticipada</option>
+                      <option value="otro">Otro</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="field-wrap" id="wrap-hora-afectada" style="display:none;">
+                  <label class="field-lbl">Hora de la cita a cancelar</label>
+                  <div class="field-box">
+                    <input type="time" name="hora_afectada" step="1800">
+                  </div>
+                  <div style="font-size:11px;color:var(--muted2);margin-top:4px;">
+                    La cita de esa hora se cancelará automáticamente.
+                  </div>
+                </div>
+                <div class="field-wrap">
+                  <label class="field-lbl">Motivo <span style="color:var(--red,#e55);">*</span></label>
+                  <textarea class="field-ta" name="motivo" required
+                    placeholder="Describe el motivo de la inasistencia o cancelación…"
+                    style="min-height:100px;"></textarea>
+                  @error('motivo')
+                  <div style="font-size:11px;color:var(--red,#e55);margin-top:4px;">
+                    {{ $message }}
+                  </div>
+                  @enderror
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn-gold">Registrar novedad</button>
+                </div>
+
+              </form>
+            </div>
+          </div>
+          <div class="card" style="min-width:280px;">
+            <div class="card-hd"><span class="card-hd-title">Mis novedades recientes</span></div>
+            <div class="card-body" style="padding:16px;">
+              @forelse($novedades ?? [] as $nov)
+              <div class="list-item" style="align-items:flex-start;gap:12px;">
+                <div class="li-info" style="flex:1;">
+                  <div class="li-name">
+                    {{ $nov->etiquetaTipo() }}
+                    <span style="font-size:11px;color:var(--muted2);margin-left:6px;">
+                      {{ \Carbon\Carbon::parse($nov->fecha)->format('d/m/Y') }}
+                      @if($nov->hora_afectada)
+                      · {{ $nov->hora_afectada }}
+                      @endif
+                    </span>
+                  </div>
+                  <div class="li-sub">{{ $nov->motivo }}</div>
+                </div>
+
+                {{-- Estado badge — Criterio 5: refleja aprobación en tiempo real --}}
+                @php
+                $badgeNov = match($nov->estado) {
+                'aprobada' => 'badge--green',
+                'rechazada' => 'badge--red',
+                default => 'badge--gold',
+                };
+                @endphp
+                <span class="badge {{ $badgeNov }}" style="flex-shrink:0;">
+                  {{ ucfirst($nov->estado) }}
+                </span>
+              </div>
+              <hr style="opacity:.08;margin:8px 0;">
+              @empty
+              <div style="text-align:center;padding:20px;color:var(--muted2);font-size:13px;">
+                No hay novedades registradas.
+              </div>
+              @endforelse
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop" id="modalReprogramar" style="
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,.72);backdrop-filter:blur(4px);
+  align-items:center;justify-content:center;">
+
+    <div style="
+    background:var(--surface2,#1a1a1a);border:1px solid rgba(255,255,255,.08);
+    border-radius:16px;width:min(480px,92vw);padding:28px 28px 24px;
+    box-shadow:0 24px 64px rgba(0,0,0,.5);position:relative;">
+
+      {{-- Encabezado --}}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--text,#fff);">
+            Reprogramar Cita
+          </div>
+          <div style="font-size:12px;color:var(--muted2,#888);margin-top:2px;" id="repro-cliente-label">
+            <!-- Se rellena por JS -->
+          </div>
+        </div>
+        <button onclick="cerrarModalReprogramar()"
+          style="background:none;border:none;cursor:pointer;color:var(--muted2,#888);padding:4px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      {{-- Formulario --}}
+      {{--
+      RUTA SUGERIDA (definir en routes/web.php):
+        Route::patch('/barber/citas/{id}/reprogramar', [BarberController::class, 'reprogramarCita'])
+             ->name('barber.citas.reprogramar');
+    --}}
+      <form id="formReprogramar"
+        method="POST"
+        action="" {{-- se actualiza por JS con la URL correcta --}}
+        style="display:flex;flex-direction:column;gap:16px;">
+        @csrf
+        @method('PATCH')
+
+        {{-- CRITERIO 3 — Nuevo horario --}}
+        <div class="field-wrap">
+          <label class="field-lbl">Nueva fecha y hora</label>
+          <div class="field-box">
+            <input type="datetime-local" name="nueva_hora"
+              id="repro-nueva-hora" required
+              style="background:transparent;border:none;color:var(--text,#fff);
+                   font-size:13px;outline:none;width:100%;">
+          </div>
+        </div>
+
+        {{-- CRITERIO 5 — Motivo (trazabilidad) --}}
+        <div class="field-wrap">
+          <label class="field-lbl">Motivo de la reprogramación</label>
+          <textarea class="field-ta" name="motivo_reprogramacion"
+            id="repro-motivo"
+            placeholder="Ej: Emergencia personal, problema con el local, etc."
+            required
+            style="min-height:90px;"></textarea>
+        </div>
+
+        {{-- Campo oculto: id de la cita --}}
+        <input type="hidden" name="id_cita" id="repro-id-cita">
+
+        <div class="form-actions" style="margin-top:4px;">
+          <button type="submit" class="btn-gold">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            Confirmar cambio
+          </button>
+          <button type="button" class="btn-outline" onclick="cerrarModalReprogramar()">
+            Cancelar
+          </button>
+        </div>
+      </form>
 
     </div>
   </div>

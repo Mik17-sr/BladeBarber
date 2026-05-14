@@ -27,9 +27,9 @@ class ClienteController extends Controller
         ])->orderBy('fecha', 'desc')->get();
 
         $idCliente = Auth::user()->cliente->id_cliente;
-        $citas = Cita::with(['barbero.usuario', 'servicios'])
-            ->where('id_cliente', $idCliente)
-            ->get();
+        $citas = Cita::with(['barbero.usuario', 'servicios', 'reprogramaciones', 'resena'])
+             ->where('id_cliente', $idCliente)
+             ->get();
         $filaActiva = ConfiguracionFila::vigente() !== null;
 
         return view('dashboard_cliente', compact('publicaciones', 'servicios', 'barberos', 'citas', 'filaActiva'));

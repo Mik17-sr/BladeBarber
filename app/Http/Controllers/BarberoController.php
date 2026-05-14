@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barbero;
+use App\Models\BloqueAlmuerzo;
 use App\Models\Pago;
 use App\Models\Usuario;
 use App\Models\Cita;
+use App\Models\NovedadDisponibilidad;
+use App\Models\Publicacion;
+use App\Models\Reprogramacion;
 use App\Models\Servicio;
 use App\Validations\Validacion;
 use Illuminate\Support\Facades\DB;
@@ -68,7 +72,9 @@ class BarberoController extends Controller
 
         $inicioSemana = Carbon::now()->startOfWeek(Carbon::MONDAY);
         $finSemana = $inicioSemana->copy()->endOfWeek(Carbon::SUNDAY);
-
+        $posts     = Publicacion::with(['imagenes', 'muro.usuario'])
+                        ->orderBy('fecha', 'desc')
+                        ->get();
         $fechaFiltro = Carbon::today();
 
         $citasHoy = Cita::with(['cliente', 'servicios'])
@@ -104,6 +110,7 @@ class BarberoController extends Controller
             'fechaFiltro',
             'totalCitasHoy',
             'servicios',
+            'posts'
         ));
     }
 
@@ -155,7 +162,15 @@ class BarberoController extends Controller
             ? Carbon::parse($request->fecha)
             : Carbon::today();
 
+        $bloqueHoy = BloqueAlmuerzo::where('id_barbero', $this->barberoId())
+            ->whereDate('fecha', today())
+            ->first();
+        $novedades = NovedadDisponibilidad::where('id_barbero', $this->barberoId())
+            ->orderByDesc('created_at')
+            ->take(10)
+            ->get();
 
+        
 
         $citasDelDia = Cita::where('id_barbero', $this->barberoId())
             ->whereDate('fecha_cita', $fechaFiltro)
@@ -178,6 +193,9 @@ class BarberoController extends Controller
             'finSemana',
             'fechaFiltro',
             'totalCitasHoy',
+            'bloqueHoy',
+            'novedades',
+
         ));
     }
 
@@ -289,4 +307,89 @@ class BarberoController extends Controller
 
         return back()->with('success', 'Servicio creado correctamente.');
     }
+
+    public function reprogramarCita(Request $request, $id)
+    {
+        $request->validate([
+            'nueva_hora'            => 'required|date',
+            'motivo_reprogramacion' => 'required|string|max:500',
+        ]);
+
+        $cita = Cita::where('id_cita', $id)
+                    ->where('id_barbero', $this->barberoId()) // ← usa el helper correcto
+                    ->firstOrFail();
+
+        Reprogramacion::create([
+            'id_cita'       => $cita->id_cita,
+            'id_barbero'    => $this->barberoId(),
+            'hora_original' => $cita->hora_cita,
+            'hora_nueva'    => $request->nueva_hora,
+            'motivo'        => $request->motivo_reprogramacion,
+        ]);
+
+        $cita->hora_cita = $request->nueva_hora;
+        $cita->estado    = 'Reprogramada';
+        $cita->save();
+
+        return redirect()
+            ->route('barber.agenda')
+            ->with('success', 'Cita reprogramada correctamente.');
+    }
+
+    public function registrarAlmuerzo(Request $request)
+    {
+        $request->validate([
+            'fecha'       => 'required|date|after_or_equal:today',
+            'hora_inicio' => 'required|in:12:00,13:00',
+        ]);
+    
+        $horaFin = BloqueAlmuerzo::calcularFin($request->hora_inicio);
+    
+        BloqueAlmuerzo::updateOrCreate(
+            [
+                'id_barbero' => $this->barberoId(),
+                'fecha'      => $request->fecha,
+            ],
+            [
+                'hora_inicio'    => $request->hora_inicio,
+                'hora_fin'       => $horaFin,
+                'automatico'     => false,
+                'id_cita_origen' => null,
+            ]
+        );
+    
+        return back()->with('success', 'Bloque de almuerzo registrado: '
+            . $request->hora_inicio . ' – ' . $horaFin . '.');
+    }
+
+    public function registrarNovedad(Request $request)
+    {
+        $request->validate([
+            'fecha'         => 'required|date',
+            'tipo'          => 'required|in:inasistencia,cancelacion_anticipada,otro',
+            'motivo'        => 'required|string|min:10|max:600',
+            'hora_afectada' => 'nullable|date_format:H:i',
+        ]);
+    
+        NovedadDisponibilidad::create([
+            'id_barbero'    => $this->barberoId(),
+            'fecha'         => $request->fecha,
+            'tipo'          => $request->tipo,
+            'motivo'        => $request->motivo,
+            'hora_afectada' => $request->hora_afectada,
+            'estado'        => 'pendiente',
+        ]);
+
+        if ($request->tipo === 'cancelacion_anticipada' && $request->hora_afectada) {
+            Cita::where('id_barbero', $this->barberoId())
+                ->whereDate('fecha_cita', $request->fecha)
+                ->where('hora_cita', 'like', $request->hora_afectada . '%')
+                ->whereIn('estado', ['Pendiente', 'Confirmada'])
+                ->update(['estado' => 'Cancelada']);
+        }
+    
+        return back()->with('success', 'Novedad registrada. Queda pendiente de aprobación.');
+    }
+
+    
 }

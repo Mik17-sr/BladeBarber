@@ -102,6 +102,15 @@
         Lista de Barberos
         <span class="nav-badge">{{ $barberos->count() }}</span>
       </button>
+      <button class="nav-item" onclick="showPanel('novedades-admin')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="3" width="7" height="7" rx="1" />
+          <rect x="3" y="14" width="7" height="7" rx="1" />
+          <rect x="14" y="14" width="7" height="7" rx="1" />
+        </svg>
+        Administrar novedades
+      </button>
       <button class="nav-item" onclick="showPanel('barber-register')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -629,7 +638,7 @@
                 </button>
 
                 {{-- Eliminar --}}
-                <form action="{{ route('admin.posts.destroy', $post->id_publicacion) }}" method="POST">
+                <form action="{{ route('posts.destroy', $post->id_publicacion) }}" method="POST">
                   @csrf @method('DELETE')
                   <button class="post-del" type="submit" title="Eliminar"
                     onclick="return confirm('¿Eliminar esta publicación?')">
@@ -707,7 +716,7 @@
         </div>
         <div class="card" style="max-width:600px;">
           <div class="card-body" style="padding:24px;">
-            <form action="{{ route('admin.posts.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data">
               @csrf
               <div style="display:flex;flex-direction:column;gap:16px;">
                 <div class="field-wrap">
@@ -927,7 +936,14 @@
         @endif
       </div>
       <div class="panel" id="panel-agenda">
-
+        <div style="font-size:11px;color:var(--muted2,#888);margin-top:4px;display:flex;align-items:center;gap:6px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <span id="ultima-actualizacion">Actualizando…</span>
+          <span style="opacity:.5;">· Auto-recarga cada 60 s</span>
+        </div>
         {{-- Encabezado --}}
         <div class="agenda-controls" style="flex-wrap:wrap;gap:12px;margin-bottom:20px;">
           <div style="flex:1;min-width:180px;">
@@ -1560,6 +1576,102 @@
             </div>
             @endforelse
           </div>
+        </div>
+      </div>
+      <div class="panel" id="panel-novedades-admin">
+        <div style="margin-bottom:20px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">
+            Novedades del Equipo
+          </div>
+          <div style="font-size:13px;color:var(--muted2);">
+            Aprueba o rechaza inasistencias y cancelaciones
+          </div>
+        </div>
+
+        @if(session('success'))
+        <div style="background:rgba(80,200,120,0.1);border:1px solid var(--green);
+        border-radius:8px;padding:10px 14px;font-size:13px;
+        color:var(--green);margin-bottom:14px;">
+          {{ session('success') }}
+        </div>
+        @endif
+
+        <div class="appt-list">
+          @forelse($novedades ?? [] as $nov)
+          <div class="appt-item" style="flex-direction:column;align-items:stretch;gap:12px;">
+
+            {{-- Info de la novedad --}}
+            <div style="display:flex;align-items:flex-start;gap:14px;">
+              <div class="li-avatar">
+                {{ strtoupper(substr($nov->barbero->usuario->nombre ?? '?', 0, 1)) }}
+              </div>
+              <div class="li-info" style="flex:1;">
+                <div class="li-name">{{ $nov->barbero->usuario->nombre ?? '—' }}</div>
+                <div class="li-sub">
+                  {{ match($nov->tipo) {
+                'inasistencia'          => 'Inasistencia (día completo)',
+                'cancelacion_anticipada'=> 'Cancelación anticipada',
+                default                 => ucfirst($nov->tipo)
+                  } }}
+                  · {{ \Carbon\Carbon::parse($nov->fecha)->format('d/m/Y') }}
+                  @if($nov->hora_afectada)
+                  · {{ \Carbon\Carbon::parse($nov->hora_afectada)->format('H:i') }}
+                  @endif
+                </div>
+                <div style="margin-top:4px;font-size:12px;color:var(--muted);">
+                  {{ $nov->motivo }}
+                </div>
+                @if($nov->aprobado_por)
+                <div style="margin-top:4px;font-size:11px;color:var(--muted2);">
+                  Gestionado por: {{ \App\Models\Usuario::find($nov->aprobado_por)->nombre ?? '—' }}
+                </div>
+                @endif
+              </div>
+              @php
+              $badgeNov = match($nov->estado) {
+              'aprobada' => 'badge--green',
+              'rechazada' => 'badge--red',
+              default => 'badge--gold',
+              };
+              @endphp
+              <span class="badge {{ $badgeNov }}">{{ ucfirst($nov->estado) }}</span>
+            </div>
+
+            {{-- Botones solo si está pendiente --}}
+            @if($nov->estado === 'pendiente')
+            <div style="display:flex;gap:8px;padding-left:46px;">
+
+              <form method="POST" action="{{ route('admin.novedades.responder', $nov->id) }}" style="flex:1;">
+                @csrf @method('PATCH')
+                <input type="hidden" name="decision" value="aprobada">
+                <button type="submit" class="btn-gold"
+                  style="width:100%;height:34px;font-size:12px;">
+                  ✓ Aprobar
+                </button>
+              </form>
+
+              <form method="POST" action="{{ route('admin.novedades.responder', $nov->id) }}" style="flex:1;"
+                onsubmit="return confirm('¿Rechazar esta novedad?')">
+                @csrf @method('PATCH')
+                <input type="hidden" name="decision" value="rechazada">
+                <button type="submit" class="btn-outline"
+                  style="width:100%;height:34px;font-size:12px;
+                   border-color:rgba(239,68,68,.4);color:#f87171;">
+                  ✗ Rechazar
+                </button>
+              </form>
+
+            </div>
+            @endif
+
+          </div>
+
+          <hr style="opacity:.07;margin:4px 0;">
+          @empty
+          <div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">
+            No hay novedades registradas.
+          </div>
+          @endforelse
         </div>
       </div>
     </div>

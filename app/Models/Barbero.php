@@ -15,4 +15,14 @@ class Barbero extends Model
     {
         return $this->belongsTo(\App\Models\Usuario::class, 'id_barbero', 'id_usuario');                 
     }
+
+    public function resenas()
+    {
+        return $this->hasMany(Resena::class, 'id_barbero', 'id_barbero');
+    }
+
+    public function promedioCalificacion(): float
+    {
+        return round($this->resenas()->avg('promedio') ?? 0, 1);
+    }
 }

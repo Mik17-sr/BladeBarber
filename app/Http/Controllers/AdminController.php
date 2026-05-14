@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Muro;
 use App\Models\Imagen;
+use App\Models\NovedadDisponibilidad;
 use App\Models\Servicio;
 
 class AdminController extends Controller
@@ -97,36 +98,6 @@ class AdminController extends Controller
         return back();
     }
 
-    public function storePost(Request $request)
-    {
-        $request->validate([
-            'content'  => 'required|string',
-            'image'    => 'nullable|image|max:2048',
-        ]);
-
-        $muro = Muro::firstOrCreate(
-            ['id_usuario' => auth()->user()->id_usuario]
-        );
-
-        $publicacion = Publicacion::create([
-            'id_muro'   => $muro->id_muro,
-            'contenido' => $request->content,
-            'fecha'     => now()->toDateString(),
-        ]);
-
-
-        if ($request->hasFile('image')) {
-            $ruta = $request->file('image')->store('publicaciones', 'public');
-
-            Imagen::create([
-                'id_publicacion' => $publicacion->id_publicacion,
-                'imagen'         => $ruta,
-            ]);
-        }
-
-        return redirect()->back()->with('success', 'Publicación creada.');
-    } 
-
     public function updateSchedule(Request $request)
     {
         return back();
@@ -162,11 +133,15 @@ class AdminController extends Controller
             ->whereDate('hora_cita', $fechaFiltro->toDateString())
             ->orderBy('hora_cita')
             ->get();
-
+        $novedades           = NovedadDisponibilidad::with('barbero.usuario')
+                           ->latest()
+                           ->get();
+        $novedadesPendientes = $novedades->where('estado', 'pendiente')->count();    
         return view('dashboard_admin', compact(
             'posts', 'config', 'barberos', 'servicios',
             'inicioSemana', 'finSemana', 'fechaFiltro',
-            'citasSemana', 'citasDelDia'
+            'citasSemana', 'citasDelDia', 
+            'novedades','novedadesPendientes'
         ));
     }
 
@@ -274,5 +249,34 @@ class AdminController extends Controller
         Servicio::where('id_servicio', $id)->delete();
 
         return back()->with('success', 'Servicio eliminado correctamente.');
+    }
+
+    public function responder(Request $request, $id)
+    {
+        $request->validate([
+            'decision' => 'required|in:aprobada,rechazada',
+        ]);
+
+        $novedad = NovedadDisponibilidad::findOrFail($id);
+
+        $novedad->update([
+            'estado'       => $request->decision,
+            'aprobado_por' => auth()->user()->id_usuario,
+        ]);
+
+        if ($request->decision === 'aprobada' && $novedad->tipo === 'inasistencia') {
+            Cita::where('id_barbero', $novedad->id_barbero)
+                ->whereDate('hora_cita', $novedad->fecha)
+                ->update(['estado' => 'cancelada']);
+        }
+
+        if ($request->decision === 'aprobada' && $novedad->tipo === 'cancelacion_anticipada' && $novedad->hora_afectada) {
+            Cita::where('id_barbero', $novedad->id_barbero)
+                ->whereDate('hora_cita', $novedad->fecha)
+                ->whereTime('hora_cita', $novedad->hora_afectada)
+                ->update(['estado' => 'cancelada']);
+        }
+
+        return back()->with('success', 'Novedad ' . $request->decision . ' correctamente.');
     }
 }

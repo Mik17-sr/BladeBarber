@@ -1970,3 +1970,27 @@
     background: none !important;
     border: none !important;
 }
+
+.filtro-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--surface3);
+  color: var(--muted2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .18s;
+}
+.filtro-btn:hover {
+  border-color: var(--violet-light);
+  color: var(--violet-light);
+}
+.filtro-btn.filtro-activo {
+  background: rgba(139,92,246,0.15);
+  border-color: var(--violet-light);
+  color: var(--violet-light);
+  font-weight: 500;
+}

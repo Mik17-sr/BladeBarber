@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BloqueAlmuerzo;
 use App\Models\Cita;
 use App\Models\Horario;
 use App\Models\Servicio;
@@ -53,6 +54,15 @@ class CitaController extends Controller
                 'fecha'   => \Carbon\Carbon::parse($c->fecha_cita)->toDateString(),
                 'hora'    => substr($c->hora_cita, 0, 5),
             ]);
+        $bloqueAlmuerzo = BloqueAlmuerzo::where('id_barbero', $id_barbero)
+            ->whereDate('fecha', $fecha)
+            ->first();    
+
+        $slotsDisponibles = $slotsDisponibles->filter(function($slot) use ($bloqueAlmuerzo) {
+            if (!$bloqueAlmuerzo) return true;
+            return !$bloqueAlmuerzo->bloqueaHora($slot);
+        });
+
 
         return response()->json([
             'horarios' => $horarios,

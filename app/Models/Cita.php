@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Cita extends Model
 {
@@ -39,5 +40,16 @@ class Cita extends Model
     public function pago()
     {
         return $this->hasOne(Pago::class, 'id_cita');
+    }
+
+    public function reprogramaciones()
+    {
+        return $this->hasMany(Reprogramacion::class, 'id_cita', 'id_cita')
+                    ->latest();
+    }
+    
+    public function resena()
+    {
+        return $this->hasOne(Resena::class, 'id_cita', 'id_cita');
     }
 }

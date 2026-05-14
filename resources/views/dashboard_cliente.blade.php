@@ -72,7 +72,7 @@
                 </svg>
                 Contraseña
             </button>
-            
+
             <div class="nav-label">Barbería</div>
             @if($filaActiva)
             <button class="nav-item" onclick="showPanel('agenda')" disabled style="pointer-events:none;opacity:0.6;">
@@ -924,7 +924,32 @@
                                     · {{ $cita->servicios->sum('duracion') ?? '60' }} min
                                 </div>
                             </div>
-
+                            @if($cita->estado === 'Reprogramada')
+                            @php $ultima = $cita->reprogramaciones->first() @endphp
+                            @if($ultima)
+                            <div style="font-size:11px;color:var(--muted2);margin-top:4px;">
+                                Motivo: {{ $ultima->motivo }}
+                            </div>
+                            <div style="font-size:11px;color:var(--muted2);">
+                                Antes: {{ \Carbon\Carbon::parse($ultima->hora_original)->format('d/m H:i') }}
+                                → {{ \Carbon\Carbon::parse($ultima->hora_nueva)->format('d/m H:i') }}
+                            </div>
+                            @endif
+                            @endif
+                            @if($cita->estado === 'Completada' && !$cita->resena)
+                            <a href="{{ route('resena.show', $cita->id_cita) }}"
+                                class="btn-violet"
+                                style="height:32px;padding:0 14px;font-size:12px;
+                                    display:inline-flex;align-items:center;gap:6px;
+                                    text-decoration:none;">
+                                ★ Calificar
+                            </a>
+                            @elseif($cita->estado === 'Completada' && $cita->resena)
+                            <span style="font-size:12px;color:var(--muted2);
+                                        display:inline-flex;align-items:center;gap:4px;">
+                                ★ {{ number_format($cita->resena->promedio, 1) }} Reseñado
+                            </span>
+                            @endif
                             <span class="badge badge--violet">
                                 {{ $cita->estado ?? 'Pendiente' }}
                             </span>
@@ -936,7 +961,7 @@
                             </span>
 
                             <div style="margin-left:auto;display:flex;gap:8px;">
-                                @if(in_array($cita->estado, ['Pendiente', 'Confirmada']))
+                                @if(in_array($cita->estado, ['Pendiente', 'Confirmada', 'Reprogramada']))
                                 <form method="POST" action="{{ route('citas.cancelar', $cita->id_cita) }}"
                                     onsubmit="return confirm('¿Seguro que deseas cancelar esta cita?')">
                                     @csrf
@@ -948,7 +973,7 @@
                                     </button>
                                 </form>
                                 @endif
-                                @if(in_array($cita->estado, ['Pendiente', 'Confirmada']))
+                                @if(in_array($cita->estado, ['Pendiente', 'Confirmada', 'Reprogramada']))
                                 <a href="{{ route('citas.reprogramar.form', $cita->id_cita) }}"
                                     class="btn-outline"
                                     style="height:32px;padding:0 14px;font-size:12px;
@@ -1124,72 +1149,55 @@
             </div>
 
             <!-- ===== BARBEROS ===== -->
-            <div class="panel" id="panel-barberos">
-                <div style="margin-bottom:20px;">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">Nuestros
-                        Barberos</div>
-                    <div style="font-size:13px;color:var(--muted2);">El equipo que te pondrá increíble</div>
+            @foreach($barberos as $barbero)
+            <div class="barber-card">
+                <div class="barber-card-top">
+                    <div class="barber-avatar">
+                        @if($barbero->usuario->foto)
+                        <img src="{{ asset('storage/' . $barbero->usuario->foto) }}"
+                            style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        @else
+                        {{ strtoupper(substr($barbero->usuario->nombre, 0, 1)) }}
+                        @endif
+                    </div>
+                    <div>
+                        <div class="barber-name">{{ $barbero->usuario->nombre }}</div>
+                        <div class="barber-spec">{{ $barbero->usuario->especialidad ?? 'Barbero' }}</div>
+                        {{-- Promedio en tiempo real --}}
+                        @php $prom = $barbero->promedioCalificacion(); @endphp
+                        <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+                            <span style="color:#C9A84C;font-size:14px;">
+                                @for($s = 1; $s <= 5; $s++)
+                                    {{ $s <= round($prom) ? '★' : '☆' }}
+                                    @endfor
+                                    </span>
+                                    <span style="font-size:12px;color:var(--muted2);">
+                                        {{ $prom > 0 ? $prom : 'Sin reseñas' }}
+                                        @if($prom > 0)
+                                        ({{ $barbero->resenas->count() }})
+                                        @endif
+                                    </span>
+                        </div>
+                    </div>
                 </div>
-                <div class="barbers-grid">
-                    <div class="barber-card">
-                        <div class="barber-card-top">
-                            <div class="barber-avatar">P</div>
-                            <div>
-                                <div class="barber-name">Pedro Gómez</div>
-                                <div class="barber-spec">Fade & Diseño especializado</div>
-                                <span class="badge badge--green"
-                                    style="margin-top:4px;display:inline-block;">Disponible</span>
-                            </div>
-                        </div>
-                        <button class="btn-violet" style="width:100%;height:38px;font-size:13px;"
-                            onclick="showPanel('agenda')">Agendar con Pedro</button>
-                    </div>
-                    <div class="barber-card">
-                        <div class="barber-card-top">
-                            <div class="barber-avatar">L</div>
-                            <div>
-                                <div class="barber-name">Luis Mora</div>
-                                <div class="barber-spec">Corte clásico & tradicional</div>
-                                <span class="badge badge--amber" style="margin-top:4px;display:inline-block;">En
-                                    cita</span>
-                            </div>
-                        </div>
-                        <button class="btn-outline" style="width:100%;height:38px;font-size:13px;"
-                            onclick="showPanel('agenda')">Agendar con Luis</button>
-                    </div>
-                    <div class="barber-card">
-                        <div class="barber-card-top">
-                            <div class="barber-avatar">A</div>
-                            <div>
-                                <div class="barber-name">Andrés Cruz</div>
-                                <div class="barber-spec">Barba & estilos modernos</div>
-                                <span class="badge badge--green"
-                                    style="margin-top:4px;display:inline-block;">Disponible</span>
-                            </div>
-                        </div>
-                        <button class="btn-violet" style="width:100%;height:38px;font-size:13px;"
-                            onclick="showPanel('agenda')">Agendar con Andrés</button>
-                    </div>
-                    <div class="barber-card">
-                        <div class="barber-card-top">
-                            <div class="barber-avatar">C</div>
-                            <div>
-                                <div class="barber-name">Camilo R.</div>
-                                <div class="barber-spec">Coloración & tendencias</div>
-                                <span class="badge badge--red"
-                                    style="margin-top:4px;display:inline-block;">Descanso</span>
-                            </div>
-                        </div>
-                        <button class="btn-outline" style="width:100%;height:38px;font-size:13px;"
-                            onclick="showPanel('agenda')">Agendar con Camilo</button>
-                    </div>
+                <div style="display:flex;gap:8px;margin-top:12px;">
+                    <button class="btn-violet" style="flex:1;height:38px;font-size:13px;"
+                        onclick="showPanel('agenda')">
+                        Agendar
+                    </button>
+                    <a href="{{ route('barbero.resenas', $barbero->id_barbero) }}"
+                        class="btn-outline"
+                        style="height:38px;padding:0 14px;font-size:12px;
+              display:inline-flex;align-items:center;text-decoration:none;">
+                        Ver reseñas
+                    </a>
                 </div>
             </div>
-
+            @endforeach
+            
             <!-- ===== MURO ===== -->
             <div class="panel" id="panel-muro">
-                <div
-                    style="margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <div style="margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
                     <div>
                         <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">Muro</div>
                         <div style="font-size:13px;color:var(--muted2);">Publicaciones de la comunidad BladeBarber</div>
@@ -1204,27 +1212,72 @@
                     </button>
                 </div>
 
-                <div class="posts-list">
+                {{-- ─── FILTROS ─── --}}
+                <div id="muroFiltros" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center;">
+
+                    {{-- Todos --}}
+                    <button class="filtro-btn filtro-activo" data-filtro="todos" onclick="filtrarMuro(this,'todos')">
+                        Todos
+                    </button>
+
+                    {{-- Admin --}}
+                    <button class="filtro-btn" data-filtro="admin" onclick="filtrarMuro(this,'admin')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            style="width:13px;height:13px;">
+                            <circle cx="12" cy="8" r="4" />
+                            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                        </svg>
+                        Administrador
+                    </button>
+
+                    {{-- Un botón por cada barbero --}}
+                    @foreach($publicaciones->filter(fn($p) => optional($p->muro->usuario)->rol === 'barbero')
+                    ->unique(fn($p) => $p->muro->usuario->id_usuario) as $pub)
+                    @php $u = $pub->muro->usuario; @endphp
+                    <button class="filtro-btn"
+                        data-filtro="barbero-{{ $u->id_usuario }}"
+                        onclick="filtrarMuro(this,'barbero-{{ $u->id_usuario }}')">
+                        @if($u->foto)
+                        <img src="{{ asset('storage/' . $u->foto) }}"
+                            style="width:20px;height:20px;border-radius:50%;object-fit:cover;">
+                        @else
+                        <span style="width:20px;height:20px;border-radius:50%;
+                   background:rgba(139,92,246,0.25);color:var(--violet-light);
+                   font-size:11px;font-weight:600;
+                   display:inline-flex;align-items:center;justify-content:center;">
+                            {{ strtoupper(substr($u->nombre, 0, 1)) }}
+                        </span>
+                        @endif
+                        {{ explode(' ', $u->nombre)[0] }}
+                    </button>
+                    @endforeach
+                </div>
+                <div class="posts-list" id="postsLista">
                     @forelse($publicaciones as $pub)
                     @php
                     $usuario = $pub->muro->usuario;
-                    $rol = $usuario->rol ?? 'cliente';
+                    $rol = strtolower($usuario->rol ?? 'cliente');
                     $inicial = strtoupper(substr($usuario->nombre, 0, 1));
                     $esMio = $usuario->id_usuario === auth()->id();
-
-                    $badgeClass = match (strtolower($rol)) {
+                    $badgeClass = match($rol) {
                     'admin' => 'badge--violet',
                     'barbero' => 'badge--green',
                     default => 'badge--amber',
                     };
-                    $badgeLabel = match (strtolower($rol)) {
+                    $badgeLabel = match($rol) {
                     'admin' => 'Admin',
                     'barbero' => 'Barbero',
                     default => 'Cliente',
                     };
+                    // data-attr para el filtro JS
+                    $dataFiltro = $rol === 'barbero'
+                    ? 'barbero-' . $usuario->id_usuario
+                    : $rol; // 'admin' o 'cliente'
                     @endphp
 
-                    <div class="post-card">
+                    <div class="post-card"
+                        data-rol="{{ $dataFiltro }}">
+
                         <div class="post-head">
                             @if($usuario->foto)
                             <div class="li-avatar" style="padding:0;overflow:hidden;">
@@ -1238,7 +1291,7 @@
                             <div class="post-meta">
                                 <div class="post-author">
                                     {{ $usuario->nombre }}
-                                    @if($esMio) <span style="color:var(--muted2);font-size:11px;">· (Tú)</span> @endif
+                                    @if($esMio)<span style="color:var(--muted2);font-size:11px;"> · (Tú)</span>@endif
                                 </div>
                                 <div class="post-time">{{ $pub->fecha->diffForHumans() }}</div>
                             </div>
@@ -1246,11 +1299,13 @@
                             <span class="badge {{ $badgeClass }}">{{ $badgeLabel }}</span>
 
                             @if($esMio)
-                            <form method="POST" action="{{ route('publicacion.destroy', $pub->id_publicacion) }}"
+                            <form method="POST"
+                                action="{{ route('publicacion.destroy', $pub->id_publicacion) }}"
                                 style="margin-left:auto;">
                                 @csrf @method('DELETE')
                                 <button type="submit"
-                                    style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;"
+                                    style="background:none;border:none;cursor:pointer;
+                         color:var(--muted);padding:4px;border-radius:6px;"
                                     title="Eliminar">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                         style="width:15px;height:15px;">
@@ -1276,12 +1331,12 @@
                         <div class="post-footer">
                             <button class="post-action" onclick="likePost(this)">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path
-                                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                                 </svg>
                                 <span>0</span>
                             </button>
-                            <button class="post-action" onclick="toggleComment(this,'c{{ $pub->id_publicacion }}')">
+                            <button class="post-action"
+                                onclick="toggleComment(this,'c{{ $pub->id_publicacion }}')">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                                 </svg>
@@ -1296,9 +1351,10 @@
                                     {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}
                                 </div>
                                 <div class="field-box" style="flex:1;height:38px;">
-                                    <input type="text" placeholder="Escribe un comentario..." style="font-size:13px;">
+                                    <input type="text" placeholder="Escribe un comentario..." style="ffont-size:13px;">
                                 </div>
-                                <button class="btn-violet" style="height:38px;padding:0 14px;font-size:12px;"
+                                <button class="btn-violet"
+                                    style="height:38px;padding:0 14px;font-size:12px;"
                                     onclick="addComment(this)">Enviar</button>
                             </div>
                         </div>

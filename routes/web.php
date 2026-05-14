@@ -13,6 +13,8 @@ use App\Http\Controllers\BarberoFilaController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\FilaConfigController;
 use App\Http\Controllers\FilaEsperaController;
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\ResenaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -101,7 +103,26 @@ Route::middleware(['auth', 'role:cliente'])->group(function () {
 
     Route::post('/fila/ingresar', [FilaEsperaController::class, 'ingresar'])->name('fila.ingresar');
     Route::delete('/fila/salir', [FilaEsperaController::class, 'salir'])->name('fila.salir');
+
+    Route::get('/resena/{id_cita}', [ResenaController::class, 'show'])
+         ->name('resena.show');
+
+    Route::post('/resena/{id_cita}', [ResenaController::class, 'store'])
+         ->name('resena.store');
+
+    Route::get('/barbero/{id_barbero}/resenas', [ResenaController::class, 'historial'])
+         ->name('barbero.resenas');
 });
+
+Route::post('/posts/store',
+    [PostController::class, 'storePost']
+)->name('posts.store');
+
+Route::delete('/posts/{id}',
+    [PostController::class, 'destroyPost']
+)->name('posts.destroy');
+
+Route::put('/posts/{id}', [PostController::class, 'updatePost'])->name('posts.update');
 /*
 |--------------------------------------------------------------------------
 | Admin
@@ -120,15 +141,6 @@ Route::middleware(['auth', 'role:admin'])
     Route::put('/password/update',
         [AdminController::class, 'updatePassword']
     )->name('password.change');
-
-    // Publicaciones
-    Route::post('/posts/store',
-        [AdminController::class, 'storePost']
-    )->name('posts.store');
-
-    Route::delete('/posts/{id}',
-        [AdminController::class, 'destroyPost']
-    )->name('posts.destroy');
 
     // Barberos
     Route::post('/barbers/store',
@@ -152,8 +164,6 @@ Route::middleware(['auth', 'role:admin'])
         [AdminController::class, 'updateBarberia']
     )->name('barberia.update');
 
-    Route::put('/posts/{id}', [AdminController::class, 'updatePost'])->name('posts.update');
-
     Route::post('/services/store',
         [AdminController::class, 'storeService']
     )->name('services.store');
@@ -167,6 +177,9 @@ Route::middleware(['auth', 'role:admin'])
 
     Route::post('/fila/config', [FilaConfigController::class, 'store'])->name('fila.config.store');
     Route::post('/fila/desactivar', [FilaConfigController::class, 'desactivar'])->name('fila.config.desactivar');
+
+    Route::patch('/novedades/{id}/responder', [AdminController::class, 'responder'])
+     ->name('novedades.responder');
 });
 
 /*
@@ -186,10 +199,6 @@ Route::middleware(['auth', 'role:barbero'])
     Route::put('/password/update',
         [BarberoController::class, 'updatePassword']
     )->name('password.update');
-
-    Route::post('/posts/store',
-        [BarberoController::class, 'storePost']
-    )->name('posts.store');
 
     Route::delete('/posts/{id}',
         [BarberoController::class, 'destroyPost']
@@ -216,6 +225,13 @@ Route::middleware(['auth', 'role:barbero'])
             [BarberoController::class, 'storeService']
     )->name('services.store');
 
+    
+    Route::patch('/citas/{id}/reprogramar',
+        [BarberoController::class, 'reprogramarCita'])
+    ->name('citas.reprogramar');
+
+    Route::post('/almuerzo',  [BarberoController::class, 'registrarAlmuerzo'])->name('almuerzo.store');
+    Route::post('/novedades', [BarberoController::class, 'registrarNovedad'])->name('novedades.store');
 });
 
 Route::get('/citas/horas-ocupadas', [CitaController::class, 'horasOcupadas'])
